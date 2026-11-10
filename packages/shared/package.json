@@ -5,7 +5,10 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./product-config": "./src/product-config.ts"
+    "./product-config": "./src/product-config.ts",
+    "./url": "./src/url.ts",
+    "./api-types": "./src/api-types.ts",
+    "./limits": "./src/limits.ts"
   },
   "scripts": {
     "lint": "eslint .",

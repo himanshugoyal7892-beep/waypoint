@@ -1,4 +1,52 @@
-# Phase 2 verification status
+# Verification status
+
+## Phase 3: tour script (SDK). VERIFIED
+
+_Verified: 2026-11-10._
+
+| Check                                                                           | Result                                                                                               |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `bash scripts/verify.sh` (all packages)                                         | PASS: lint, typecheck, **128 tests** (SDK 39, shared 53, web 36), format, bundle check, `next build` |
+| Bundle size                                                                     | **13.5 KB gzipped** (34.4 KB minified), budget 25 KB                                                 |
+| No HTML sinks in the bundle                                                     | PASS (checked in the built file and by ESLint)                                                       |
+| Real Chrome end-to-end (`pnpm --filter @waypoint/sdk browser-check`), 15 checks | **15/15 PASS**                                                                                       |
+
+Real-browser checks run against a three-page test shop with deliberately hostile global CSS:
+
+- auto-start on a matching page
+- host CSS doesn't leak into the tooltip
+- focus moves into the tooltip
+- off-screen targets are scrolled into view
+- the page still scrolls during a tour
+- the tooltip follows its target on scroll
+- cross-page navigation resumes the right step
+- Back
+- step 5 on a third page
+- Finish removes every SDK node
+- a completed tour doesn't restart
+- Tab stays inside the tooltip
+- Escape closes and restores focus
+- an SPA `pushState` route change advances the tour
+- no page errors
+
+Analytics from the run were stored with origin + path only, covering every event type the run produced: started, viewed, next, back, skipped, completed.
+
+**Fixed during verification:**
+
+- The highlight animated in from off-screen. It now appears instantly in place, which a screenshot review caught.
+- The tours endpoint now accepts browser same-origin requests that carry no `Origin` header (`Sec-Fetch-Site: same-origin`), so the practice page on the dashboard's own domain works.
+- Lint now ignores the built bundle in `public/sdk`.
+
+**Not yet verified:**
+
+- Safari and Firefox (only Chrome tested)
+- Mobile screen sizes, which are out of MVP scope
+- Screen-reader announcement quality (ARIA roles and labels are in place and asserted in tests)
+- The `element_not_found` path in a real browser (covered by unit tests)
+
+---
+
+# Phase 2
 
 **Overall: VERIFIED.** `bash scripts/verify.sh` passes end to end with real dependencies,
 a real PostgreSQL 16 database, ESLint, TypeScript, Vitest and a Next.js production build.

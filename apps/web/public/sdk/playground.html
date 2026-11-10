@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Tour playground</title>
+    <style>
+      body {
+        margin: 0;
+        font:
+          15px/1.5 system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        color: #0f172a;
+        background: #f8fafc;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 28px;
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .logo {
+        font-weight: 700;
+        font-size: 18px;
+      }
+      input[type="search"] {
+        flex: 1;
+        max-width: 420px;
+        padding: 9px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font: inherit;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        border-radius: 8px;
+        padding: 9px 14px;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+      }
+      .primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #fff;
+      }
+      main {
+        max-width: 980px;
+        margin: 28px auto;
+        padding: 0 28px;
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+      }
+      .note {
+        grid-column: 1 / -1;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 10px;
+        padding: 12px 16px;
+      }
+      .note code {
+        background: #fff;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .img {
+        height: 110px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #99f6e4, #6366f1);
+      }
+      .img.b {
+        background: linear-gradient(135deg, #fde68a, #f97316);
+      }
+      .price {
+        color: #475569;
+      }
+      aside .card {
+        display: grid;
+        gap: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="logo">Playground Shop</span>
+      <input
+        type="search"
+        data-tour-id="search-input"
+        placeholder="Search products"
+        aria-label="Search products"
+      />
+      <button data-tour-id="cart-icon" aria-label="Cart, 1 item">🛒 Cart (1)</button>
+    </header>
+    <main>
+      <p class="note" id="note">
+        This is a practice page for trying tours. Open it with your project key, e.g.
+        <code>/sdk/playground.html?key=pk_…</code>. Your site's origin must be in the project's
+        allowed origins. Every element below has a <code>data-tour-id</code> you can use as a CSS
+        selector.
+      </p>
+      <section class="grid" aria-label="Products">
+        <article class="card" data-tour-id="product-card-aurora-headphones">
+          <div class="img" aria-hidden="true"></div>
+          <h2>Aurora headphones</h2>
+          <p class="price">$99</p>
+          <button class="primary" data-tour-id="add-to-cart">Add to cart</button>
+        </article>
+        <article class="card">
+          <div class="img b" aria-hidden="true"></div>
+          <h2>Nimbus speaker</h2>
+          <p class="price">$149</p>
+          <button>Add to cart</button>
+        </article>
+      </section>
+      <aside>
+        <div class="card">
+          <h2>Your cart</h2>
+          <p>Aurora headphones × 1 — $99</p>
+          <button class="primary" data-tour-id="checkout-button">Checkout</button>
+        </div>
+      </aside>
+    </main>
+    <script>
+      (function () {
+        var key = new URLSearchParams(location.search).get("key");
+        var note = document.getElementById("note");
+        if (!key) {
+          note.textContent =
+            "Add ?key=YOUR_PROJECT_PUBLIC_KEY to this page's address to load your published tours.";
+          return;
+        }
+        window.ProductTourConfig = { projectId: key, debug: true };
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "/sdk/product-tour.js";
+        document.body.appendChild(s);
+      })();
+    </script>
+  </body>
+</html>

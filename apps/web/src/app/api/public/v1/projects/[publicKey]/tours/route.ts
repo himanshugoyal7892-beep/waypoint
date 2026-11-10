@@ -6,7 +6,7 @@ import {
 import type { NextRequest } from "next/server";
 import { ApiError } from "@/server/http/errors";
 import { json, noContent, toErrorResponse } from "@/server/http/respond";
-import { PUBLIC_TOURS_CORS, corsHeaders } from "@/server/public/cors-core";
+import { PUBLIC_TOURS_CORS, corsHeaders, requestOrigin } from "@/server/public/cors-core";
 import { getEligibleTours, resolvePublicProject } from "@/server/public/tours";
 import { enforceRateLimit } from "@/server/rate-limit";
 
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 // GET /api/public/v1/projects/{publicKey}/tours?path=/products/x
 export async function GET(req: NextRequest, ctx: Ctx) {
-  const origin = req.headers.get("origin");
+  const origin = requestOrigin(req.headers, req.url);
   let cors = corsHeaders(origin, false);
   try {
     const { publicKey } = await ctx.params;

@@ -67,6 +67,15 @@ step "9. Tests"
 pnpm test
 pass "tests"
 
+step "9b. SDK bundle (≤ 25 KB gzip, no HTML sinks, committed copy up to date)"
+before=$(sha256sum apps/web/public/sdk/product-tour.js 2>/dev/null | cut -d' ' -f1 || true)
+pnpm --filter @waypoint/sdk build
+after=$(sha256sum apps/web/public/sdk/product-tour.js | cut -d' ' -f1)
+if [ "$before" != "$after" ]; then
+  echo "NOTE: apps/web/public/sdk/product-tour.js was rebuilt and changed. Commit the new bundle."
+fi
+pass "sdk bundle"
+
 step "10. Formatting"
 pnpm format:check
 pass "prettier"

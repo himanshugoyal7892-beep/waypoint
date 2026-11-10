@@ -5,3 +5,5 @@ coverage
 .turbo
 pnpm-lock.yaml
 apps/web/prisma/migrations/**/*.sql
+packages/sdk/dist
+apps/web/public/sdk/product-tour.js

@@ -31,3 +31,21 @@ export function bearerToken(header: string | null): string | null {
   const m = /^Bearer\s+(\S+)$/i.exec(header.trim());
   return m ? m[1]! : null;
 }
+
+/**
+ * The request's origin. Browsers omit the Origin header on same-origin GET requests, so for
+ * those we trust the browser-set (unforgeable from page scripts) `Sec-Fetch-Site: same-origin`
+ * and use the request's own origin. Non-browser clients get no fallback.
+ */
+export function requestOrigin(headers: Headers, requestUrl: string): string | null {
+  const origin = headers.get("origin");
+  if (origin) return origin;
+  if (headers.get("sec-fetch-site") === "same-origin") {
+    try {
+      return new URL(requestUrl).origin;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}

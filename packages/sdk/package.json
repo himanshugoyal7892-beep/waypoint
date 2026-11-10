@@ -1,0 +1,28 @@
+{
+  "name": "@waypoint/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup && node scripts/postbuild.mjs",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "size": "node scripts/postbuild.mjs --check-only",
+    "browser-check": "node tests/browser/browser-check.mjs"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "1.7.4"
+  },
+  "devDependencies": {
+    "@waypoint/config": "workspace:*",
+    "@waypoint/shared": "workspace:*",
+    "eslint": "9.36.0",
+    "globals": "16.4.0",
+    "happy-dom": "20.0.10",
+    "playwright-core": "1.56.1",
+    "tsup": "8.5.1",
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
+  }
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUILDER_CORS, bearerToken, corsHeaders } from "@/server/public/cors-core";
+import { BUILDER_CORS, bearerToken, corsHeaders, requestOrigin } from "@/server/public/cors-core";
 
 describe("corsHeaders", () => {
   it("echoes only allowed origins, never *", () => {
@@ -23,5 +23,21 @@ describe("bearerToken", () => {
     expect(bearerToken("bearer  wpa_abc ")).toBe("wpa_abc");
     expect(bearerToken("Basic xyz")).toBeNull();
     expect(bearerToken(null)).toBeNull();
+  });
+});
+
+describe("requestOrigin", () => {
+  const url = "https://app.example.com/api/public/v1/projects/pk/tours";
+  it("prefers the Origin header", () => {
+    expect(requestOrigin(new Headers({ origin: "http://localhost:5173" }), url)).toBe(
+      "http://localhost:5173",
+    );
+  });
+  it("falls back to the request origin only for browser same-origin requests", () => {
+    expect(requestOrigin(new Headers({ "sec-fetch-site": "same-origin" }), url)).toBe(
+      "https://app.example.com",
+    );
+    expect(requestOrigin(new Headers({ "sec-fetch-site": "cross-site" }), url)).toBeNull();
+    expect(requestOrigin(new Headers(), url)).toBeNull();
   });
 });

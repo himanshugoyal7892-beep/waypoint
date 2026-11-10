@@ -5,14 +5,14 @@
 Waypoint lets a product team create guided tours on its own website. You install one script
 tag, then build multi-step tooltip tours in a dashboard and publish them without code changes.
 
-| Phase | Scope                                                      | Status                                                                                      |
-| ----- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| 1     | Architecture & plan                                        | ✅ [docs/phase-1-architecture.md](docs/phase-1-architecture.md)                             |
-| **2** | **Foundation, auth, admin dashboard, admin + public APIs** | ✅ Implemented and verified: see [docs/verification-status.md](docs/verification-status.md) |
-| 3     | Embeddable SDK (overlay, tooltip, navigation, SPA support) | Not started                                                                                 |
-| 4     | Visual builder, element picker, preview                    | Not started                                                                                 |
-| 5     | Analytics page, demo shop, E2E tests                       | Not started                                                                                 |
-| 6     | Deployment, docs, roadmap                                  | Not started                                                                                 |
+| Phase | Scope                                                          | Status                                                                                      |
+| ----- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| 1     | Architecture & plan                                            | ✅ [docs/phase-1-architecture.md](docs/phase-1-architecture.md)                             |
+| **2** | **Foundation, auth, admin dashboard, admin + public APIs**     | ✅ Implemented and verified: see [docs/verification-status.md](docs/verification-status.md) |
+| **3** | **Embeddable SDK (overlay, tooltip, navigation, SPA support)** | ✅ Implemented and verified (unit tests + real Chrome)                                      |
+| 4     | Visual builder, element picker, preview                        | Not started                                                                                 |
+| 5     | Analytics page, demo shop, E2E tests                           | Not started                                                                                 |
+| 6     | Deployment, docs, roadmap                                      | Not started                                                                                 |
 
 ## Repository layout
 
@@ -23,7 +23,8 @@ apps/web            Next.js 15 dashboard + all APIs (admin, builder, public SDK)
   src/server        services, auth adapter, ownership, rate limiting, builder pass, http helpers
   src/components    shadcn-style UI primitives and dashboard components
   tests/unit        Vitest unit tests
-packages/shared     Zod schemas, enums, limits, URL/origin/ordering/publish rules (used by API + UI, later the SDK)
+packages/sdk        Embeddable tour script (vanilla TS → apps/web/public/sdk/product-tour.js, 13.5 KB gzip)
+packages/shared     Zod schemas, enums, limits, URL/origin/ordering/publish rules (used by API, UI and SDK)
 packages/config     shared tsconfig and ESLint flat config
 scripts/            verify.sh (full verification), offline-check.sh (no-network subset)
 docs/               architecture, schema decisions, verification status
@@ -122,6 +123,22 @@ All errors use `{ "error": { "code", "message", "details?" } }`. Admin resources
 
 See [docs/phase-2-schema-decisions.md](docs/phase-2-schema-decisions.md) for how these differ from the Phase 1 contract.
 
+## The tour script (SDK)
+
+Customers add the snippet from the Install page. The script:
+
+- loads published tours for the current page, auto-starts **AUTO** tours once per visitor, and continues tours across pages and single-page-app route changes;
+- highlights the target, dims the page (the page stays scrollable and clickable), and positions a tooltip with Next / Back / Skip / Finish / close, a step counter, keyboard support (Tab stays inside, Escape closes) and focus restore;
+- waits up to 5 s for late-rendered elements, records `element_not_found` and skips ahead when an element is missing;
+- sends analytics in batches (`sendBeacon` with `text/plain` on page exit), with origin + path only;
+- renders everything in a Shadow DOM so host CSS can't affect it, and removes every node and listener when the tour ends.
+
+JavaScript API: `ProductTour.start(tourId)`, `ProductTour.stop()`, `ProductTour.reset()`, `ProductTour.version`.
+
+**Practice page:** `/sdk/playground.html?key=YOUR_PUBLIC_KEY` on the dashboard's own domain (add that domain to the project's allowed origins).
+
+Build with `pnpm --filter @waypoint/sdk build` (enforces the 25 KB gzip budget and copies the bundle into `apps/web/public/sdk/`). Real-browser check: `pnpm --filter @waypoint/sdk browser-check` (needs Chrome, the API on :3000 and the published seed tour).
+
 ## Security notes
 
 - Tour content is plain text only and is rendered as text, never HTML. ESLint bans HTML sinks.
@@ -132,7 +149,6 @@ See [docs/phase-2-schema-decisions.md](docs/phase-2-schema-decisions.md) for how
 
 ## Known limitations (Phase 2)
 
-- No SDK yet: the install snippet points at `/sdk/product-tour.js`, which is delivered in Phase 3.
 - The builder pass link opens the site, but there is no builder panel until Phase 4.
 - Edits to a published tour go live immediately. There are no versioned drafts of published tours.
 - Each project has a single owner (no teams or roles). Deleting a Clerk user doesn't delete local data (no webhook yet).
