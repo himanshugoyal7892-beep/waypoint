@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Waypoint preview button</title>
+    <style>
+      body {
+        margin: 0;
+        font:
+          15px/1.6 system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        color: #0f172a;
+        background: #f8fafc;
+      }
+      main {
+        max-width: 720px;
+        margin: 48px auto;
+        padding: 0 24px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 6px;
+      }
+      .lead {
+        color: #475569;
+        margin: 0 0 28px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 18px;
+      }
+      .card h2 {
+        font-size: 16px;
+        margin: 0 0 10px;
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 9px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font:
+          14px ui-monospace,
+          Menlo,
+          monospace;
+      }
+      .bm {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 14px 0 4px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: #3b4fd8;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        cursor: grab;
+      }
+      .bm[aria-disabled="true"] {
+        background: #94a3b8;
+        pointer-events: none;
+      }
+      ol {
+        margin: 0;
+        padding-left: 20px;
+      }
+      li {
+        margin: 6px 0;
+      }
+      kbd {
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        padding: 0 5px;
+        font-size: 13px;
+      }
+      .muted {
+        color: #64748b;
+        font-size: 13px;
+      }
+      .warn {
+        border-color: #fed7aa;
+        background: #fff7ed;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Preview button</h1>
+      <p class="lead">
+        Show your published tours on any website, in your own browser only, without installing
+        anything on that website. It's for building and demoing tours before the real snippet is
+        added.
+      </p>
+
+      <div class="card">
+        <label for="key">Your project's public key</label>
+        <input id="key" placeholder="pk_…" spellcheck="false" autocomplete="off" />
+        <p class="muted">Find it on your project's Install page in Waypoint.</p>
+        <a id="bookmarklet" class="bm" href="#" aria-disabled="true">🧭 Waypoint preview</a>
+        <p class="muted" id="status">Enter a valid key to activate the button.</p>
+      </div>
+
+      <div class="card">
+        <h2>Set it up once</h2>
+        <ol>
+          <li>
+            Show your bookmarks bar: in Chrome on a Mac press <kbd>⌘</kbd> <kbd>Shift</kbd>
+            <kbd>B</kbd> (Windows: <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>B</kbd>).
+          </li>
+          <li>Drag the blue <strong>Waypoint preview</strong> button onto your bookmarks bar.</li>
+          <li>
+            In Waypoint, add the website's address (for example
+            <code>https://www.example.com</code>) to the project's <strong>Allowed origins</strong>.
+          </li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h2>Use it</h2>
+        <ol>
+          <li>Open the website and go to the page where your tour starts.</li>
+          <li>
+            Click <strong>Waypoint preview</strong> in your bookmarks bar. Your published tour
+            appears.
+          </li>
+          <li>Clicking it again replays the tour from the start.</li>
+          <li>
+            If the page fully reloads during a tour, click the button again to continue where you
+            were.
+          </li>
+        </ol>
+      </div>
+
+      <div class="card warn">
+        <h2>Good to know</h2>
+        <p class="muted" style="margin: 0">
+          Only you see the tour, and only after clicking the button. Nothing is installed on the
+          website. Real visitors see tours only after the site's team adds the install snippet (for
+          example through Google Tag Manager).
+        </p>
+      </div>
+    </main>
+    <script>
+      (function () {
+        var input = document.getElementById("key");
+        var link = document.getElementById("bookmarklet");
+        var status = document.getElementById("status");
+        var origin = location.origin;
+        var KEY = /^pk_[A-Za-z0-9]{24}$/;
+
+        function code(key) {
+          return (
+            "(function(){var K=" +
+            JSON.stringify(key) +
+            ",B=" +
+            JSON.stringify(origin) +
+            ";" +
+            "try{for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&k.indexOf('ptour:seen:')===0)localStorage.removeItem(k)}}catch(e){}" +
+            "if(window.ProductTour&&window.ProductTour.destroy)window.ProductTour.destroy();window.__ptourLoaded=false;" +
+            "window.ProductTourConfig={projectId:K,debug:true};" +
+            "var s=document.createElement('script');s.async=true;s.src=B+'/sdk/product-tour.js?v='+Date.now();" +
+            "s.onerror=function(){alert('Waypoint preview: the tour script could not load on this site.')};" +
+            "(document.head||document.documentElement).appendChild(s)})();"
+          );
+        }
+
+        function update() {
+          var key = input.value.trim();
+          if (KEY.test(key)) {
+            link.href = "javascript:" + encodeURIComponent(code(key));
+            link.setAttribute("aria-disabled", "false");
+            status.textContent = "Ready. Drag the button to your bookmarks bar.";
+          } else {
+            link.href = "#";
+            link.setAttribute("aria-disabled", "true");
+            status.textContent = key
+              ? "That doesn't look like a public key (it starts with pk_ and has 24 more letters/numbers)."
+              : "Enter a valid key to activate the button.";
+          }
+        }
+
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          status.textContent =
+            "Don't click it here: drag it to your bookmarks bar, then click it while on the website.";
+        });
+        input.addEventListener("input", update);
+        input.value = new URLSearchParams(location.search).get("key") || "";
+        update();
+      })();
+    </script>
+  </body>
+</html>

@@ -26,6 +26,8 @@ interface Active {
   index: number;
   ui: TourUI;
   abort: AbortController;
+  /** Set while navigating to another page for the current step (cross-page Next/Back). */
+  pendingDirection: 1 | -1 | null;
 }
 
 const currentPath = () => normalizePathname(location.pathname);
@@ -56,8 +58,15 @@ export class TourEngine {
 
       const progress = readJson<Progress>(this.deps.session, "active");
       if (this.active) {
-        const { tour, index } = this.active;
-        if (onThisPage(tour.steps[index]!.pageUrl)) return; // still on the right page
+        const { tour, index, pendingDirection } = this.active;
+        if (onThisPage(tour.steps[index]!.pageUrl)) {
+          // Arrived on the page of a step we navigated to (in-app navigation keeps the script alive).
+          if (pendingDirection) {
+            this.active.pendingDirection = null;
+            this.safeShow(index, pendingDirection);
+          }
+          return;
+        }
         // The visitor navigated themselves, typically by clicking what the step pointed at.
         const next = tour.steps[index + 1];
         if (next && onThisPage(next.pageUrl)) return this.safeShow(index + 1, 1);
@@ -145,7 +154,7 @@ export class TourEngine {
       onSkip: () => this.guard(() => this.skip()),
     });
     ui.hide();
-    this.active = { tour, index, ui, abort: new AbortController() };
+    this.active = { tour, index, ui, abort: new AbortController(), pendingDirection: null };
     if (fresh) this.track(tour, "tour_started");
     this.safeShow(index, 1);
   }
@@ -222,6 +231,8 @@ export class TourEngine {
     const target = a.tour.steps[index]!;
     if (onThisPage(target.pageUrl)) return this.safeShow(index, direction);
     // Cross-page step: persist progress, flush analytics, then navigate (approved decision 11).
+    a.index = index;
+    a.pendingDirection = direction;
     this.saveProgress(a.tour, index);
     this.deps.analytics.flush(true);
     a.ui.hide();

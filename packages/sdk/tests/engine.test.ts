@@ -370,6 +370,24 @@ describe("cross-page tours and SPA navigation", () => {
     expect(q(".counter")?.textContent).toBe("2 of 3");
   });
 
+  it("continues after in-app (SPA) navigation for cross-page Next and Back", async () => {
+    addTargets("t1", "t2");
+    const { engine, events } = setup([multi()], {
+      navigate: (path) => history.pushState({}, "", path),
+    });
+    await engine.evaluate();
+    await tick();
+    click("Next"); // step 2 lives on /products/aurora → in-app navigation
+    await engine.evaluate(); // the URL watcher calls this after the route change
+    await tick();
+    expect(q(".counter")?.textContent).toBe("2 of 3");
+    click("Back"); // step 1 lives on /
+    await engine.evaluate();
+    await tick();
+    expect(q(".counter")?.textContent).toBe("1 of 3");
+    expect(names(events).filter((n) => n === "tour_started")).toHaveLength(1);
+  });
+
   it("hides the tooltip on unrelated routes", async () => {
     addTargets("t1");
     const { engine } = setup([multi()]);

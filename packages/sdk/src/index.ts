@@ -6,6 +6,7 @@ import { sessionId, visitorId } from "./ids";
 import { TourEngine } from "./runtime/engine";
 import { safeStore } from "./storage";
 import { watchUrl } from "./url/watch";
+import { navigateTo } from "./navigate";
 
 export const VERSION = "0.3.0";
 
@@ -61,7 +62,7 @@ export function boot(): void {
     analytics,
     local,
     session,
-    navigate: (path) => location.assign(path),
+    navigate: (path) => navigateTo(path),
     log,
   });
   const stopWatching = watchUrl(() => void engine.evaluate());
