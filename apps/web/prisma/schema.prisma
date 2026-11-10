@@ -1,0 +1,166 @@
+// Waypoint MVP schema. Source of truth: docs/phase-1-architecture.md §3.
+// Deviations from Phase 1 are listed in docs/phase-2-schema-decisions.md.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum TourStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TriggerType {
+  AUTO
+  MANUAL
+}
+
+enum Placement {
+  TOP
+  BOTTOM
+  LEFT
+  RIGHT
+  AUTO
+}
+
+enum BuilderMode {
+  BUILD
+  PREVIEW
+}
+
+enum EventName {
+  tour_started
+  step_viewed
+  next_clicked
+  back_clicked
+  tour_skipped
+  tour_completed
+  element_not_found
+  tour_error
+}
+
+model User {
+  id          String   @id @default(cuid())
+  clerkUserId String   @unique
+  email       String
+  name        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projects        Project[]
+  builderSessions BuilderSession[]
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  name           String   @db.VarChar(100)
+  domain         String   @db.VarChar(253)
+  allowedOrigins String[]
+  publicKey      String   @unique @db.VarChar(40)
+  createdById    String
+  createdBy      User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tours           Tour[]
+  events          AnalyticsEvent[]
+  builderSessions BuilderSession[]
+
+  @@index([createdById])
+  @@index([allowedOrigins], type: Gin)
+}
+
+model Tour {
+  id          String      @id @default(cuid())
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String      @db.VarChar(120)
+  description String?     @db.VarChar(500)
+  status      TourStatus  @default(DRAFT)
+  startUrl    String      @db.VarChar(2048)
+  triggerType TriggerType @default(AUTO)
+  version     Int         @default(1)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  publishedAt DateTime?
+  archivedAt  DateTime?
+
+  steps           TourStep[]
+  events          AnalyticsEvent[]
+  builderSessions BuilderSession[]
+
+  @@index([projectId, status])
+}
+
+model TourStep {
+  id              String    @id @default(cuid())
+  tourId          String
+  tour            Tour      @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  stepOrder       Int
+  title           String    @default("") @db.VarChar(120)
+  description     String    @default("") @db.VarChar(1000)
+  cssSelector     String    @db.VarChar(1000)
+  pageUrl         String    @db.VarChar(2048)
+  placement       Placement @default(AUTO)
+  nextButtonLabel String    @default("Next") @db.VarChar(30)
+  backButtonLabel String    @default("Back") @db.VarChar(30)
+  allowSkip       Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([tourId, stepOrder])
+}
+
+/// A builder pass is minted by the dashboard, delivered to the customer site in the URL
+/// fragment, and redeemed exactly once for a bearer access token. Only SHA-256 hashes of the
+/// pass and the access token are stored.
+model BuilderSession {
+  id              String      @id @default(cuid())
+  passHash        String      @unique @db.Char(64)
+  accessTokenHash String?     @unique @db.Char(64)
+  mode            BuilderMode @default(BUILD)
+  projectId       String
+  project         Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tourId          String?
+  tour            Tour?       @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  targetOrigin    String      @db.VarChar(300)
+  createdById     String
+  createdBy       User        @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  expiresAt       DateTime
+  redeemedAt      DateTime?
+  revokedAt       DateTime?
+  lastUsedAt      DateTime?
+  createdAt       DateTime    @default(now())
+
+  @@index([projectId])
+}
+
+model AnalyticsEvent {
+  id                 String    @id @default(cuid())
+  clientEventId      String    @db.VarChar(64)
+  projectId          String
+  project            Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tourId             String
+  tour               Tour      @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  tourVersion        Int
+  stepId             String?   @db.VarChar(64)
+  stepOrder          Int?
+  anonymousVisitorId String    @db.VarChar(64)
+  sessionId          String    @db.VarChar(64)
+  eventName          EventName
+  currentUrl         String    @db.VarChar(2048)
+  occurredAt         DateTime
+  receivedAt         DateTime  @default(now())
+  errorCode          String?   @db.VarChar(64)
+
+  @@unique([projectId, clientEventId])
+  @@index([tourId, eventName, occurredAt])
+  @@index([tourId, stepOrder, eventName])
+}
