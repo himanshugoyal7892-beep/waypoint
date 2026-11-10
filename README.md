@@ -73,17 +73,18 @@ Clerk is used in exactly one place, `apps/web/src/server/auth/clerk-provider.ts`
 
 See [`.env.example`](.env.example). Only `NEXT_PUBLIC_*` variables reach the browser.
 
-| Variable                                             | Exposure | Purpose                                                   |
-| ---------------------------------------------------- | -------- | --------------------------------------------------------- |
-| `DATABASE_URL`, `DIRECT_URL`                         | server   | Postgres (pooled / direct for migrations)                 |
-| `NEXT_PUBLIC_APP_URL`                                | public   | Dashboard origin (CSRF origin check, CSP hints)           |
-| `NEXT_PUBLIC_SDK_URL`                                | public   | SDK URL used in the install snippet                       |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`                  | public   | Clerk                                                     |
-| `CLERK_SECRET_KEY`                                   | server   | Clerk                                                     |
-| `RATE_LIMIT_DRIVER`                                  | server   | `memory` (dev only) or `upstash` (required in production) |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | server   | Distributed rate limiting                                 |
-| `BUILDER_PASS_TTL_MINUTES`                           | server   | Builder pass lifetime (5–120, default 120)                |
-| `SEED_CLERK_USER_ID`, `SEED_USER_EMAIL`              | server   | Seed owner                                                |
+| Variable                                             | Exposure | Purpose                                                                                 |
+| ---------------------------------------------------- | -------- | --------------------------------------------------------------------------------------- |
+| `DATABASE_URL`, `DIRECT_URL`                         | server   | Postgres (pooled / direct for migrations)                                               |
+| `NEXT_PUBLIC_APP_URL`                                | public   | Dashboard origin (CSRF origin check, CSP hints)                                         |
+| `NEXT_PUBLIC_SDK_URL`                                | public   | SDK URL used in the install snippet                                                     |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`                  | public   | Clerk                                                                                   |
+| `CLERK_SECRET_KEY`                                   | server   | Clerk                                                                                   |
+| `RATE_LIMIT_DRIVER`                                  | server   | `memory` (dev only) or `upstash` (required in production)                               |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | server   | Distributed rate limiting                                                               |
+| `ALLOW_MEMORY_RATE_LIMIT_IN_PRODUCTION`              | server   | `true` lets a demo/staging deployment run without Upstash (weaker, per-instance limits) |
+| `BUILDER_PASS_TTL_MINUTES`                           | server   | Builder pass lifetime (5–120, default 120)                                              |
+| `SEED_CLERK_USER_ID`, `SEED_USER_EMAIL`              | server   | Seed owner                                                                              |
 
 ## API overview
 

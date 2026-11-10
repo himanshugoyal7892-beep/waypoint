@@ -13,7 +13,8 @@
         "RATE_LIMIT_DRIVER",
         "UPSTASH_REDIS_REST_URL",
         "UPSTASH_REDIS_REST_TOKEN",
-        "BUILDER_PASS_TTL_MINUTES"
+        "BUILDER_PASS_TTL_MINUTES",
+        "ALLOW_MEMORY_RATE_LIMIT_IN_PRODUCTION"
       ]
     },
     "dev": {

@@ -19,6 +19,8 @@ const schema = z
     UPSTASH_REDIS_REST_URL: z.string().url().optional().or(z.literal("")),
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
     BUILDER_PASS_TTL_MINUTES: z.coerce.number().int().min(5).max(120).default(120),
+    /** Demo/staging escape hatch: allow the per-instance memory limiter in production. */
+    ALLOW_MEMORY_RATE_LIMIT_IN_PRODUCTION: z.enum(["true", "false"]).default("false"),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === "production") {
@@ -28,7 +30,10 @@ const schema = z
           path: ["CLERK_SECRET_KEY"],
           message: "Clerk keys are required in production.",
         });
-      if (env.RATE_LIMIT_DRIVER !== "upstash")
+      if (
+        env.RATE_LIMIT_DRIVER !== "upstash" &&
+        env.ALLOW_MEMORY_RATE_LIMIT_IN_PRODUCTION !== "true"
+      )
         ctx.addIssue({
           code: "custom",
           path: ["RATE_LIMIT_DRIVER"],
