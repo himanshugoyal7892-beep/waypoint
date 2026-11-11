@@ -2,12 +2,23 @@ export type FindResult =
   | { element: Element }
   | { element: null; reason: "invalid_selector" | "timeout" | "aborted" };
 
-function query(selector: string): Element | null | "invalid" {
+/**
+ * First match, preferring a visible one: responsive sites often render hidden duplicates
+ * (e.g. a mobile header next to the desktop header) that match the same selector.
+ */
+function query(
+  selector: string,
+  visible: (el: Element) => boolean = isVisible,
+): Element | null | "invalid" {
+  let all: NodeListOf<Element>;
   try {
-    return document.querySelector(selector);
+    all = document.querySelectorAll(selector);
   } catch {
     return "invalid";
   }
+  if (all.length <= 1) return all[0] ?? null;
+  for (const el of Array.from(all)) if (visible(el)) return el;
+  return all[0] ?? null;
 }
 
 /** Zero-size, display:none and visibility:hidden elements can't be pointed at. */
@@ -30,7 +41,7 @@ export function findElement(
     visible = isVisible,
   }: { timeoutMs?: number; signal?: AbortSignal; visible?: (el: Element) => boolean } = {},
 ): Promise<FindResult> {
-  const first = query(selector);
+  const first = query(selector, visible);
   if (first === "invalid") return Promise.resolve({ element: null, reason: "invalid_selector" });
   if (first && visible(first)) return Promise.resolve({ element: first });
 
@@ -46,7 +57,7 @@ export function findElement(
       resolve(r);
     };
     const tryFind = () => {
-      const el = query(selector);
+      const el = query(selector, visible);
       if (el && el !== "invalid" && visible(el)) finish({ element: el });
     };
     const onAbort = () => finish({ element: null, reason: "aborted" });

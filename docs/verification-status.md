@@ -1,5 +1,42 @@
 # Verification status
 
+## Phase 4: visual builder + analytics page. VERIFIED
+
+_Verified: 2026-11-11._
+
+| Check                                                      | Result                                                                                                               |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `bash scripts/verify.sh`                                   | PASS: lint, typecheck, **150 tests** (SDK 59, shared 53, web 38), format, bundle budgets, `next build`               |
+| Bundles                                                    | Visitor script **13.9 KB** gzip (budget 25 KB). Builder **21.0 KB** gzip (budget 45 KB), loaded only in builder mode |
+| Builder on live **redingtonpartner.com** (`builder-check`) | **15/15 PASS**                                                                                                       |
+| Visitor tour regression (`browser-check`)                  | **15/15 PASS**                                                                                                       |
+| Analytics SQL on real recorded events                      | PASS (grouped counts and distinct visitors per step)                                                                 |
+
+The builder checks on the live site:
+
+- the panel opens and rejects a malformed code;
+- a valid code connects and lists tours;
+- clicking the search box gives `#search` (rated OK, hidden mobile copy noted);
+- clicking a nav link doesn't navigate and yields `a[href="/brands"]`;
+- steps save, and an empty title/description shows a validation error;
+- reorder, preview (real runtime, no analytics), stop preview and publish all work;
+- clicking the bookmark during page start-up still opens the builder after a reload;
+- Waypoint causes no page errors. The site logs its own React #418 hydration errors with or without Waypoint.
+
+**Found and fixed on the real site:**
+
+1. Clicking the bookmark while the site was starting up let the site's framework remove our UI. Tooltips and the builder now re-attach (limited retries).
+2. The site has hidden duplicate elements (mobile header). The runtime now uses the first _visible_ match, and the generator accepts selectors unique among visible elements.
+3. A long selector stretched the panel sideways, clipping its text.
+
+**Not yet verified:**
+
+- The dashboard pages for the builder code and analytics in a signed-in browser. They type-check and build, but need Clerk sign-in to view, so check them manually.
+- Builder on Safari and Firefox.
+- Pages inside the Redington partner login (needs your account).
+
+---
+
 ## Phase 3: tour script (SDK). VERIFIED
 
 _Verified: 2026-11-10._

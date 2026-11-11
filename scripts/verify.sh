@@ -68,11 +68,11 @@ pnpm test
 pass "tests"
 
 step "9b. SDK bundle (≤ 25 KB gzip, no HTML sinks, committed copy up to date)"
-before=$(sha256sum apps/web/public/sdk/product-tour.js 2>/dev/null | cut -d' ' -f1 || true)
+before=$(cat apps/web/public/sdk/product-tour*.js 2>/dev/null | sha256sum | cut -d' ' -f1 || true)
 pnpm --filter @waypoint/sdk build
-after=$(sha256sum apps/web/public/sdk/product-tour.js | cut -d' ' -f1)
+after=$(cat apps/web/public/sdk/product-tour*.js | sha256sum | cut -d' ' -f1)
 if [ "$before" != "$after" ]; then
-  echo "NOTE: apps/web/public/sdk/product-tour.js was rebuilt and changed. Commit the new bundle."
+  echo "NOTE: the SDK bundles in apps/web/public/sdk were rebuilt and changed. Commit them."
 fi
 pass "sdk bundle"
 

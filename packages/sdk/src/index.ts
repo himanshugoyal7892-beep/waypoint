@@ -8,11 +8,16 @@ import { safeStore } from "./storage";
 import { watchUrl } from "./url/watch";
 import { navigateTo } from "./navigate";
 
-export const VERSION = "0.3.0";
+export const VERSION = "0.4.0";
 
 declare global {
   interface Window {
-    ProductTourConfig?: { projectId?: string; apiBase?: string; debug?: boolean };
+    ProductTourConfig?: {
+      projectId?: string;
+      apiBase?: string;
+      debug?: boolean;
+      builder?: boolean;
+    };
     ProductTour?: {
       version: string;
       start(tourId: string): Promise<boolean>;
@@ -41,9 +46,13 @@ export function boot(): void {
   const log = config.debug ? (m: string) => console.warn(`[${PRODUCT.name}] ${m}`) : undefined;
 
   const params = new URLSearchParams(location.search);
-  if (params.has(PRODUCT.sdk.builderQueryParam) || params.has(PRODUCT.sdk.previewQueryParam)) {
-    // Builder and preview modes arrive in Phase 4. Don't run visitor tours alongside them.
-    log?.("builder/preview mode is not available in this version");
+  const wantsBuilder =
+    params.has(PRODUCT.sdk.builderQueryParam) ||
+    params.has(PRODUCT.sdk.previewQueryParam) ||
+    window.ProductTourConfig?.builder === true;
+  if (wantsBuilder) {
+    // Builder mode: visitor tours don't run; the builder bundle is loaded on demand.
+    loadBuilder(config.apiBase, config.projectKey, params.get(PRODUCT.sdk.previewQueryParam));
     return;
   }
 
@@ -84,6 +93,15 @@ export function boot(): void {
   if (document.readyState === "loading")
     document.addEventListener("DOMContentLoaded", run, { once: true });
   else run();
+}
+
+function loadBuilder(apiBase: string, projectKey: string, tourId: string | null) {
+  if (window.__ptourBuilderActive) return;
+  window.__ptourBuilderInit = { apiBase, projectKey, tourId };
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = `${apiBase}/sdk/product-tour-builder.js?v=${VERSION}`;
+  (document.head || document.documentElement).appendChild(s);
 }
 
 try {

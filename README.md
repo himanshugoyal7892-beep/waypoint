@@ -10,8 +10,8 @@ tag, then build multi-step tooltip tours in a dashboard and publish them without
 | 1     | Architecture & plan                                            | ✅ [docs/phase-1-architecture.md](docs/phase-1-architecture.md)                             |
 | **2** | **Foundation, auth, admin dashboard, admin + public APIs**     | ✅ Implemented and verified: see [docs/verification-status.md](docs/verification-status.md) |
 | **3** | **Embeddable SDK (overlay, tooltip, navigation, SPA support)** | ✅ Implemented and verified (unit tests + real Chrome)                                      |
-| 4     | Visual builder, element picker, preview                        | Not started                                                                                 |
-| 5     | Analytics page, demo shop, E2E tests                           | Not started                                                                                 |
+| **4** | **Visual builder, element picker, preview**                    | ✅ Implemented and verified (unit tests + real Chrome on a live third-party site)           |
+| 5     | Analytics page, demo shop, E2E tests                           | 🟡 Analytics page done; demo shop not started                                               |
 | 6     | Deployment, docs, roadmap                                      | Not started                                                                                 |
 
 ## Repository layout
@@ -139,6 +139,22 @@ JavaScript API: `ProductTour.start(tourId)`, `ProductTour.stop()`, `ProductTour.
 
 Build with `pnpm --filter @waypoint/sdk build` (enforces the 25 KB gzip budget and copies the bundle into `apps/web/public/sdk/`). Real-browser check: `pnpm --filter @waypoint/sdk browser-check` (needs Chrome, the API on :3000 and the published seed tour).
 
+## Visual builder
+
+Create steps by clicking elements on the real website:
+
+1. Tour page → **Open visual builder** → copy the one-time builder code (valid 2 hours, one website).
+2. On the website, click the **Waypoint builder** bookmark (get it from `/sdk/preview.html?key=YOUR_KEY`), or open the direct link if the snippet is installed.
+3. Paste the code → **+ Add step** → click an element → write the text → **Save step**. Reorder, preview (not recorded in analytics) and publish from the panel.
+
+The builder is a separate bundle (`product-tour-builder.js`, ~21 KB gzip) loaded only in builder mode, so visitors never download it. Selectors are generated in this order: `data-tour-id` → stable id → `data-testid`-style attributes → accessible attributes → stable classes → anchored path → positional path, with a Stable / OK / Fragile rating. Hidden duplicates (e.g. mobile menus) are tolerated: the runtime uses the first _visible_ match.
+
+Real-site check: `PASS=wpb_… pnpm --filter @waypoint/sdk builder-check` (needs Chrome and the API on :3000).
+
+## Analytics
+
+Tour page → **Analytics**: visitors who started, starts, completions and completion rate, skips and skip rate, element-not-found count, and drop-off by step, for the last 7, 30 or 90 days. API: `GET /api/admin/v1/tours/{tourId}/analytics?days=30`.
+
 ## Security notes
 
 - Tour content is plain text only and is rendered as text, never HTML. ESLint bans HTML sinks.
@@ -149,7 +165,6 @@ Build with `pnpm --filter @waypoint/sdk build` (enforces the 25 KB gzip budget a
 
 ## Known limitations (Phase 2)
 
-- The builder pass link opens the site, but there is no builder panel until Phase 4.
 - Edits to a published tour go live immediately. There are no versioned drafts of published tours.
 - Each project has a single owner (no teams or roles). Deleting a Clerk user doesn't delete local data (no webhook yet).
 - Allowed origins are exact matches (no wildcard subdomains).

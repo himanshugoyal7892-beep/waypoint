@@ -2,6 +2,7 @@ import type { PublicTour } from "@waypoint/shared/api-types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TourEngine, type EngineDeps } from "../src/runtime/engine";
 import { safeStore } from "../src/storage";
+import { TourUI } from "../src/ui/tooltip";
 
 const step = (
   n: number,
@@ -85,8 +86,8 @@ beforeEach(() => {
   } as DOMRect);
 });
 afterEach(() => {
+  TourUI.destroyAll();
   document.body.textContent = "";
-  host()?.remove();
   localStorage.clear();
   sessionStorage.clear();
 });
@@ -287,11 +288,11 @@ describe("missing elements", () => {
   });
 
   it("ends gracefully when nothing can be shown", async () => {
-    const real = document.querySelector.bind(document);
-    vi.spyOn(document, "querySelector").mockImplementation((sel: string) => {
+    const real = document.querySelectorAll.bind(document);
+    vi.spyOn(document, "querySelectorAll").mockImplementation(((sel: string) => {
       if (sel === "div[[[") throw new DOMException("bad selector", "SyntaxError");
       return real(sel);
-    });
+    }) as typeof document.querySelectorAll);
     const { engine, events } = setup([tour({ steps: [step(1, { cssSelector: "div[[[" })] })]);
     await engine.evaluate();
     await tick(20);
@@ -408,5 +409,21 @@ describe("cross-page tours and SPA navigation", () => {
     deps.local.set("seen:tour1", "completed");
     engine.reset();
     expect(deps.local.get("seen:tour1")).toBeNull();
+  });
+});
+
+describe("host page removing our UI", () => {
+  it("re-attaches the tour UI if the page removes it (e.g. framework hydration)", async () => {
+    addTargets("t1", "t2");
+    const { engine } = setup([tour({ steps: [step(1), step(2)] })]);
+    await engine.evaluate();
+    await tick();
+    host()!.remove();
+    await tick();
+    expect(host()).not.toBeNull();
+    expect(q(".title")?.textContent).toBe("Title 1");
+    engine.stop();
+    await tick();
+    expect(host()).toBeNull(); // our own removal is not undone
   });
 });

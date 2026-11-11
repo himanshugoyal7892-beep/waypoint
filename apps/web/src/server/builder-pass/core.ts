@@ -22,6 +22,8 @@ export interface BuilderSessionRecord {
   tourId: string | null;
   mode: BuilderModeValue;
   targetOrigin: string;
+  /** The dashboard user who created the pass; builder edits act as this user. */
+  createdById: string;
   expiresAt: Date;
   redeemedAt: Date | null;
   revokedAt: Date | null;

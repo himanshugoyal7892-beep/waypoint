@@ -104,7 +104,7 @@ describe("findElement", () => {
 
   it("reports invalid selectors without throwing", async () => {
     // Real browsers throw a SyntaxError for malformed selectors; happy-dom is lenient, so simulate it.
-    vi.spyOn(document, "querySelector").mockImplementation(() => {
+    vi.spyOn(document, "querySelectorAll").mockImplementation(() => {
       throw new DOMException("bad selector", "SyntaxError");
     });
     expect(await findElement("div[[[", { visible: always })).toEqual({
@@ -118,5 +118,18 @@ describe("findElement", () => {
     const p = findElement("#never", { visible: always, timeoutMs: 5000, signal: ctrl.signal });
     ctrl.abort();
     expect(await p).toEqual({ element: null, reason: "aborted" });
+  });
+});
+
+describe("findElement with hidden duplicates", () => {
+  it("returns the first visible match", async () => {
+    const a = document.createElement("button");
+    a.id = "dup";
+    a.className = "hidden";
+    const b = document.createElement("button");
+    b.id = "dup";
+    document.body.append(a, b);
+    const r = await findElement("#dup", { visible: (el) => !el.classList.contains("hidden") });
+    expect(r.element).toBe(b);
   });
 });

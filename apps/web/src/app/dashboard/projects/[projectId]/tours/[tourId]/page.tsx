@@ -1,4 +1,4 @@
-import { ListOrdered, Plus } from "lucide-react";
+import { BarChart3, ListOrdered, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -31,7 +31,12 @@ export default async function TourPage({
 
   const projectHref = `/dashboard/projects/${projectId}`;
   const base = `${projectHref}/tours/${tour.id}`;
-  const firstOrigin = tour.project.allowedOrigins[0] ?? "http://localhost:5173";
+  // Prefer a real website over local development origins for the builder.
+  const origins = tour.project.allowedOrigins;
+  const firstOrigin =
+    origins.find((o) => !/^http:\/\/(localhost|127\.0\.0\.1)/.test(o)) ??
+    origins[0] ??
+    "http://localhost:5173";
   const startPath = tour.startUrl.includes("*") ? "/" : tour.startUrl;
 
   return (
@@ -40,7 +45,18 @@ export default async function TourPage({
         title={tour.name}
         breadcrumbs={[{ href: `${projectHref}/tours`, label: "Tours" }]}
         actions={
-          <DeleteTourButton tourId={tour.id} name={tour.name} afterHref={`${projectHref}/tours`} />
+          <>
+            <Button variant="outline" asChild>
+              <Link href={`${base}/analytics`}>
+                <BarChart3 aria-hidden /> Analytics
+              </Link>
+            </Button>
+            <DeleteTourButton
+              tourId={tour.id}
+              name={tour.name}
+              afterHref={`${projectHref}/tours`}
+            />
+          </>
         }
       />
 
@@ -74,6 +90,7 @@ export default async function TourPage({
           </Card>
           <BuilderPassCard
             projectId={projectId}
+            projectKey={tour.project.publicKey}
             tourId={tour.id}
             defaultUrl={`${firstOrigin}${startPath}`}
           />

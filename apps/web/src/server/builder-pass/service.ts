@@ -26,6 +26,7 @@ const recordSelect = {
   tourId: true,
   mode: true,
   targetOrigin: true,
+  createdById: true,
   expiresAt: true,
   redeemedAt: true,
   revokedAt: true,

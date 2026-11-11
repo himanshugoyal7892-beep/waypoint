@@ -8,7 +8,9 @@
     "./product-config": "./src/product-config.ts",
     "./url": "./src/url.ts",
     "./api-types": "./src/api-types.ts",
-    "./limits": "./src/limits.ts"
+    "./limits": "./src/limits.ts",
+    "./enums": "./src/enums.ts",
+    "./publish-rules": "./src/publish-rules.ts"
   },
   "scripts": {
     "lint": "eslint .",

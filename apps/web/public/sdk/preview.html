@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <title>Waypoint preview button</title>
+    <title>Waypoint bookmarks</title>
     <style>
       body {
         margin: 0;
@@ -71,6 +71,10 @@
         font-weight: 600;
         cursor: grab;
       }
+      .bm.builder {
+        background: #0f766e;
+        margin-left: 8px;
+      }
       .bm[aria-disabled="true"] {
         background: #94a3b8;
         pointer-events: none;
@@ -102,7 +106,7 @@
   </head>
   <body>
     <main>
-      <h1>Preview button</h1>
+      <h1>Waypoint bookmarks</h1>
       <p class="lead">
         Show your published tours on any website, in your own browser only, without installing
         anything on that website. It's for building and demoing tours before the real snippet is
@@ -114,6 +118,9 @@
         <input id="key" placeholder="pk_…" spellcheck="false" autocomplete="off" />
         <p class="muted">Find it on your project's Install page in Waypoint.</p>
         <a id="bookmarklet" class="bm" href="#" aria-disabled="true">🧭 Waypoint preview</a>
+        <a id="builderBookmarklet" class="bm builder" href="#" aria-disabled="true"
+          >🛠 Waypoint builder</a
+        >
         <p class="muted" id="status">Enter a valid key to activate the button.</p>
       </div>
 
@@ -124,7 +131,10 @@
             Show your bookmarks bar: in Chrome on a Mac press <kbd>⌘</kbd> <kbd>Shift</kbd>
             <kbd>B</kbd> (Windows: <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>B</kbd>).
           </li>
-          <li>Drag the blue <strong>Waypoint preview</strong> button onto your bookmarks bar.</li>
+          <li>
+            Drag both buttons, <strong>Waypoint preview</strong> and
+            <strong>Waypoint builder</strong>, onto your bookmarks bar.
+          </li>
           <li>
             In Waypoint, add the website's address (for example
             <code>https://www.example.com</code>) to the project's <strong>Allowed origins</strong>.
@@ -133,7 +143,28 @@
       </div>
 
       <div class="card">
-        <h2>Use it</h2>
+        <h2>Build a tour by clicking</h2>
+        <ol>
+          <li>
+            In Waypoint, open your tour and click <strong>Open visual builder</strong>. Copy the
+            builder code.
+          </li>
+          <li>
+            Open the website, then click <strong>Waypoint builder</strong> in your bookmarks bar.
+          </li>
+          <li>
+            Paste the code and click <strong>Connect</strong>. Then click
+            <strong>+ Add step</strong> and click any element on the page.
+          </li>
+          <li>
+            If the page fully reloads, click <strong>Waypoint builder</strong> again: you stay
+            signed in for two hours.
+          </li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h2>Show a tour</h2>
         <ol>
           <li>Open the website and go to the page where your tour starts.</li>
           <li>
@@ -161,20 +192,25 @@
       (function () {
         var input = document.getElementById("key");
         var link = document.getElementById("bookmarklet");
+        var builderLink = document.getElementById("builderBookmarklet");
         var status = document.getElementById("status");
         var origin = location.origin;
         var KEY = /^pk_[A-Za-z0-9]{24}$/;
 
-        function code(key) {
+        function code(key, builder) {
           return (
             "(function(){var K=" +
             JSON.stringify(key) +
             ",B=" +
             JSON.stringify(origin) +
             ";" +
-            "try{for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&k.indexOf('ptour:seen:')===0)localStorage.removeItem(k)}}catch(e){}" +
+            (builder
+              ? "if(window.__ptourBuilderActive)return;"
+              : "try{for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&k.indexOf('ptour:seen:')===0)localStorage.removeItem(k)}}catch(e){}") +
             "if(window.ProductTour&&window.ProductTour.destroy)window.ProductTour.destroy();window.__ptourLoaded=false;" +
-            "window.ProductTourConfig={projectId:K,debug:true};" +
+            "window.ProductTourConfig={projectId:K,debug:true" +
+            (builder ? ",builder:true" : "") +
+            "};" +
             "var s=document.createElement('script');s.async=true;s.src=B+'/sdk/product-tour.js?v='+Date.now();" +
             "s.onerror=function(){alert('Waypoint preview: the tour script could not load on this site.')};" +
             "(document.head||document.documentElement).appendChild(s)})();"
@@ -184,22 +220,28 @@
         function update() {
           var key = input.value.trim();
           if (KEY.test(key)) {
-            link.href = "javascript:" + encodeURIComponent(code(key));
+            link.href = "javascript:" + encodeURIComponent(code(key, false));
+            builderLink.href = "javascript:" + encodeURIComponent(code(key, true));
             link.setAttribute("aria-disabled", "false");
-            status.textContent = "Ready. Drag the button to your bookmarks bar.";
+            builderLink.setAttribute("aria-disabled", "false");
+            status.textContent = "Ready. Drag both buttons to your bookmarks bar.";
           } else {
             link.href = "#";
+            builderLink.href = "#";
             link.setAttribute("aria-disabled", "true");
+            builderLink.setAttribute("aria-disabled", "true");
             status.textContent = key
               ? "That doesn't look like a public key (it starts with pk_ and has 24 more letters/numbers)."
               : "Enter a valid key to activate the button.";
           }
         }
 
-        link.addEventListener("click", function (e) {
-          e.preventDefault();
-          status.textContent =
-            "Don't click it here: drag it to your bookmarks bar, then click it while on the website.";
+        [link, builderLink].forEach(function (a) {
+          a.addEventListener("click", function (e) {
+            e.preventDefault();
+            status.textContent =
+              "Don't click it here: drag it to your bookmarks bar, then click it while on the website.";
+          });
         });
         input.addEventListener("input", update);
         input.value = new URLSearchParams(location.search).get("key") || "";

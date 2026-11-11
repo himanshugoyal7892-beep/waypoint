@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "size": "node scripts/postbuild.mjs --check-only",
-    "browser-check": "node tests/browser/browser-check.mjs"
+    "browser-check": "node tests/browser/browser-check.mjs",
+    "builder-check": "node tests/browser/builder-check.mjs"
   },
   "dependencies": {
     "@floating-ui/dom": "1.7.4"

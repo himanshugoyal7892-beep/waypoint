@@ -9,6 +9,7 @@ import {
   shift,
   type Placement,
 } from "@floating-ui/dom";
+import { keepAttached } from "./keep-attached";
 import { STYLES } from "./styles";
 
 export interface TooltipActions {
@@ -51,6 +52,13 @@ function el<K extends keyof HTMLElementTagNameMap>(
  * listener it created and restores focus.
  */
 export class TourUI {
+  private static readonly live = new Set<TourUI>();
+
+  /** Destroys every live tooltip (used by tests and full teardown). */
+  static destroyAll() {
+    for (const ui of Array.from(TourUI.live)) ui.destroy();
+  }
+
   private readonly host: HTMLElement;
   private readonly root: ShadowRoot;
   private readonly highlight: HTMLDivElement;
@@ -58,6 +66,7 @@ export class TourUI {
   private stopAutoUpdate: (() => void) | null = null;
   private readonly previousFocus: Element | null;
   private readonly onKeyDown = (e: KeyboardEvent) => this.handleKey(e);
+  private readonly release: () => void;
 
   constructor(private readonly actions: TooltipActions) {
     this.previousFocus = document.activeElement;
@@ -70,6 +79,8 @@ export class TourUI {
     this.highlight.setAttribute("aria-hidden", "true");
     this.root.append(style, this.highlight);
     document.documentElement.appendChild(this.host);
+    this.release = keepAttached(this.host);
+    TourUI.live.add(this);
     window.addEventListener("keydown", this.onKeyDown, true);
   }
 
@@ -223,6 +234,8 @@ export class TourUI {
   destroy() {
     this.hide();
     window.removeEventListener("keydown", this.onKeyDown, true);
+    this.release();
+    TourUI.live.delete(this);
     this.host.remove();
     const prev = this.previousFocus as HTMLElement | null;
     if (prev && prev.isConnected && typeof prev.focus === "function")

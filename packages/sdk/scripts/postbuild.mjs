@@ -1,34 +1,38 @@
-// Copies the bundle into the web app's public folder and enforces the size budget
-// (Phase 1: ≤ 25 KB gzipped). `--check-only` checks the size without copying.
+// Copies the bundles into the web app's public folder and enforces size budgets.
+// The visitor bundle keeps the Phase 1 budget (≤ 25 KB gzip); the builder bundle loads only
+// for tour authors. `--check-only` checks sizes without copying.
 import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const bundle = resolve(here, "../dist/product-tour.js");
-const target = resolve(here, "../../../apps/web/public/sdk/product-tour.js");
-const BUDGET = 25 * 1024;
-
-const raw = readFileSync(bundle);
-const gz = gzipSync(raw, { level: 9 }).length;
+const BUNDLES = [
+  { file: "product-tour.js", budget: 25 * 1024 },
+  { file: "product-tour-builder.js", budget: 45 * 1024 },
+];
 const kb = (n) => `${(n / 1024).toFixed(1)} KB`;
-console.log(
-  `product-tour.js: ${kb(raw.length)} minified, ${kb(gz)} gzipped (budget ${kb(BUDGET)})`,
-);
+let failed = false;
 
-for (const banned of ["innerHTML", "outerHTML", "insertAdjacentHTML"]) {
-  if (raw.includes(banned)) {
-    console.error(`Bundle contains banned HTML sink: ${banned}`);
-    process.exit(1);
+for (const { file, budget } of BUNDLES) {
+  const src = resolve(here, "../dist", file);
+  const raw = readFileSync(src);
+  const gz = gzipSync(raw, { level: 9 }).length;
+  console.log(`${file}: ${kb(raw.length)} minified, ${kb(gz)} gzipped (budget ${kb(budget)})`);
+  for (const banned of ["innerHTML", "outerHTML", "insertAdjacentHTML"]) {
+    if (raw.includes(banned)) {
+      console.error(`${file} contains banned HTML sink: ${banned}`);
+      failed = true;
+    }
+  }
+  if (gz > budget) {
+    console.error(`${file} exceeds its gzip budget.`);
+    failed = true;
+  }
+  if (!failed && !process.argv.includes("--check-only")) {
+    const target = resolve(here, "../../../apps/web/public/sdk", file);
+    mkdirSync(dirname(target), { recursive: true });
+    copyFileSync(src, target);
   }
 }
-if (gz > BUDGET) {
-  console.error("Bundle exceeds the 25 KB gzip budget.");
-  process.exit(1);
-}
-if (!process.argv.includes("--check-only")) {
-  mkdirSync(dirname(target), { recursive: true });
-  copyFileSync(bundle, target);
-  console.log(`Copied to ${target}`);
-}
+if (failed) process.exit(1);
