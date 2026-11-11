@@ -1,4 +1,4 @@
-import { BarChart3, ListOrdered, Plus } from "lucide-react";
+import { BarChart3, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -74,9 +74,10 @@ export default async function TourPage({
             <CardContent>
               {tour.steps.length === 0 ? (
                 <EmptyState
-                  icon={<ListOrdered />}
+                  variant="step"
+                  className="border-none bg-transparent py-6"
                   title="No steps yet"
-                  description="Each step points at an element on a page and shows a tooltip next to it."
+                  description="Each step points at an element on your website. Add one here, or click elements directly with the visual builder below."
                   action={
                     <Button asChild>
                       <Link href={`${base}/steps/new`}>Add the first step</Link>

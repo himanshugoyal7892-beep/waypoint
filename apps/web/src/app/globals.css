@@ -1,18 +1,30 @@
 @import "tailwindcss";
 
+/*
+ * Waypoint theme: wayfinding. Indigo "route" colour on a lavender-tinted ground, a deep
+ * ink sidebar, and one amber accent reserved for the "you are here" waypoint pin.
+ */
 @theme {
   --color-background: #ffffff;
-  --color-foreground: #0f172a;
+  --color-foreground: #171a3d;
   --color-card: #ffffff;
-  --color-card-foreground: #0f172a;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #5b6474;
-  --color-border: #e2e8f0;
-  --color-primary: #3b4fd8;
+  --color-card-foreground: #171a3d;
+  --color-canvas: #f5f6fc;
+  --color-muted: #eef0f8;
+  --color-muted-foreground: #5d6283;
+  --color-border: #e1e4f2;
+  --color-primary: #4a44d6;
   --color-primary-foreground: #ffffff;
+  --color-primary-soft: #ecebfd;
+  --color-ink: #1b1f4b;
+  --color-ink-muted: #a9add6;
+  --color-pin: #f5a524;
   --color-destructive: #c62828;
-  --color-ring: #3b4fd8;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-ring: #4a44d6;
+  --font-sans:
+    "Instrument Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display:
+    "Bricolage Grotesque Variable", "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
@@ -21,7 +33,14 @@
     color-scheme: light;
   }
   body {
-    @apply bg-muted/40 text-foreground antialiased;
+    @apply bg-canvas text-foreground antialiased;
+    font-feature-settings: "ss01";
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
   }
   code {
     @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];
@@ -29,6 +48,39 @@
   :focus-visible {
     outline-color: var(--color-ring);
   }
+}
+
+/* Topographic contours, fading out down the page: the one decorative element. */
+.contour-ground {
+  background-color: var(--color-canvas);
+  background-image:
+    linear-gradient(to bottom, rgb(245 246 252 / 0) 0, var(--color-canvas) 520px),
+    radial-gradient(1100px 420px at 75% -80px, rgb(74 68 214 / 0.14), transparent 70%),
+    url("/brand/contours.svg");
+  background-repeat: no-repeat;
+  background-size:
+    100% 100%,
+    100% 100%,
+    1600px auto;
+  background-position:
+    0 0,
+    0 0,
+    right -240px top -120px;
+}
+
+/* Contours on dark ink (auth pages). */
+.contour-ink {
+  background-color: var(--color-ink);
+  background-image:
+    radial-gradient(900px 500px at 20% 0%, rgb(74 68 214 / 0.55), transparent 70%),
+    url("/brand/contours.svg");
+  background-repeat: no-repeat;
+  background-size:
+    100% 100%,
+    1500px auto;
+  background-position:
+    0 0,
+    left -360px bottom -260px;
 }
 
 .skip-link {

@@ -87,22 +87,24 @@ export function BuilderPassCard({
         <form
           onSubmit={generate}
           noValidate
-          className="grid gap-4 sm:grid-cols-[1fr_9rem_auto] sm:items-end"
+          className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end"
         >
-          <Field
-            id="builder-url"
-            label="Website page"
-            error={fieldError}
-            hint="Must be on one of the project's allowed origins."
-          >
-            <Input
-              {...controlProps("builder-url", fieldError, "hint")}
-              type="url"
-              value={targetUrl}
-              onChange={(e) => setTargetUrl(e.target.value)}
-              className="font-mono"
-            />
-          </Field>
+          <div className="sm:col-span-2">
+            <Field
+              id="builder-url"
+              label="Website page"
+              error={fieldError}
+              hint="Must be on one of the project's allowed origins."
+            >
+              <Input
+                {...controlProps("builder-url", fieldError, "hint")}
+                type="url"
+                value={targetUrl}
+                onChange={(e) => setTargetUrl(e.target.value)}
+                className="font-mono"
+              />
+            </Field>
+          </div>
           <Field id="builder-mode" label="Access">
             <NativeSelect
               {...controlProps("builder-mode")}

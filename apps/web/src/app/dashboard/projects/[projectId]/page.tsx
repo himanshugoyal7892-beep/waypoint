@@ -1,9 +1,9 @@
-import { Plus } from "lucide-react";
+import { KeyRound, Map as MapIcon, Plus, Rocket } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DeleteProjectButton } from "@/components/delete-buttons";
 import { ProjectForm } from "@/components/forms/project-form";
-import { PageHeader, TourStatusBadge } from "@/components/layout";
+import { PageHeader, StatCard, TourStatusBadge } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert } from "@/components/ui/misc";
@@ -46,27 +46,28 @@ export default async function ProjectOverviewPage({
         </Alert>
       )}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardDescription>Tours</CardDescription>
-            <p className="text-3xl font-semibold tabular-nums">{project.tours.length}</p>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>Published</CardDescription>
-            <p className="text-3xl font-semibold tabular-nums">{published}</p>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>Public key</CardDescription>
-            <p className="truncate font-mono text-sm">{project.publicKey}</p>
-            <Link href={`${base}/install`} className="text-xs text-primary hover:underline">
+        <StatCard label="Tours" value={project.tours.length} icon={<MapIcon />} tone="amber" />
+        <StatCard
+          label="Live"
+          value={published}
+          icon={<Rocket />}
+          tone="green"
+          hint="Published tours"
+        />
+        <StatCard
+          label="Public key"
+          value={
+            <span className="block truncate font-mono text-base font-medium">
+              {project.publicKey}
+            </span>
+          }
+          icon={<KeyRound />}
+          hint={
+            <Link href={`${base}/install`} className="text-primary hover:underline">
               View install snippet
             </Link>
-          </CardHeader>
-        </Card>
+          }
+        />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

@@ -1,5 +1,5 @@
 import { TOUR_STATUSES, type TourStatus } from "@waypoint/shared";
-import { Map as MapIcon, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState, PageHeader, TourStatusBadge } from "@/components/layout";
@@ -66,7 +66,7 @@ export default async function ToursPage({
 
       {tours.length === 0 ? (
         <EmptyState
-          icon={<MapIcon />}
+          variant="tour"
           title={status ? `No ${status.toLowerCase()} tours` : "No tours yet"}
           description={
             status
@@ -82,7 +82,7 @@ export default async function ToursPage({
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-background">
+        <div className="overflow-x-auto rounded-xl border border-border bg-white shadow-[0_1px_2px_rgb(27_31_75/0.05)]">
           <table className="w-full text-sm">
             <caption className="sr-only">Tours in this project</caption>
             <thead className="border-b border-border text-left text-xs text-muted-foreground">

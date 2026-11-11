@@ -1,8 +1,8 @@
-import { BarChart3 } from "lucide-react";
+import { CheckCircle2, CircleSlash, Play, SearchX, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { EmptyState, PageHeader, TourStatusBadge } from "@/components/layout";
+import { EmptyState, PageHeader, StatCard, TourStatusBadge } from "@/components/layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert } from "@/components/ui/misc";
 import { loadOr404 } from "@/lib/page-data";
@@ -15,19 +15,17 @@ export const metadata: Metadata = { title: "Tour analytics" };
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
-function Stat({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <p className="text-3xl font-semibold tabular-nums">{value}</p>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-      </CardHeader>
-    </Card>
-  );
-}
+const BAR_TONES = { indigo: "bg-primary", green: "bg-[#1d9a5b]", amber: "bg-pin" } as const;
 
-function Bar({ value, label }: { value: number; label: string }) {
+function Bar({
+  value,
+  label,
+  tone = "indigo",
+}: {
+  value: number;
+  label: string;
+  tone?: keyof typeof BAR_TONES;
+}) {
   return (
     <div className="flex items-center gap-2">
       <div
@@ -35,7 +33,7 @@ function Bar({ value, label }: { value: number; label: string }) {
         role="img"
         aria-label={`${label}: ${pct(value)}`}
       >
-        <div className="h-full rounded-full bg-primary" style={{ width: pct(value) }} />
+        <div className={cn("h-full rounded-full", BAR_TONES[tone])} style={{ width: pct(value) }} />
       </div>
       <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
         {pct(value)}
@@ -63,11 +61,12 @@ export default async function TourAnalyticsPage({
   return (
     <>
       <PageHeader
-        title={`Analytics · ${tour.name}`}
-        description={`Last ${days} days · ${formatDate(a.range.from)} – ${formatDate(a.range.to)}`}
+        title={tour.name}
+        description={`Analytics for the last ${days} days, ${formatDate(a.range.from)} to ${formatDate(a.range.to)}`}
         breadcrumbs={[
           { href: `/dashboard/projects/${projectId}/tours`, label: "Tours" },
           { href: tourHref, label: tour.name },
+          { href: `${tourHref}/analytics`, label: "Analytics" },
         ]}
         actions={<TourStatusBadge status={tour.status} />}
       />
@@ -92,7 +91,7 @@ export default async function TourAnalyticsPage({
 
       {a.totalStarts === 0 ? (
         <EmptyState
-          icon={<BarChart3 />}
+          variant="data"
           title="No visitors yet"
           description={
             tour.status === "PUBLISHED"
@@ -103,18 +102,28 @@ export default async function TourAnalyticsPage({
       ) : (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <Stat label="Visitors who started" value={a.uniqueVisitorsStarted} />
-            <Stat label="Total starts" value={a.totalStarts} />
-            <Stat
+            <StatCard label="Visitors started" value={a.uniqueVisitorsStarted} icon={<Users />} />
+            <StatCard label="Total starts" value={a.totalStarts} icon={<Play />} tone="slate" />
+            <StatCard
               label="Completed"
               value={a.totalCompletions}
               hint={`${pct(a.completionRate)} of starts`}
+              icon={<CheckCircle2 />}
+              tone="green"
             />
-            <Stat label="Skipped" value={a.totalSkips} hint={`${pct(a.skipRate)} of starts`} />
-            <Stat
-              label="Element not found"
+            <StatCard
+              label="Skipped"
+              value={a.totalSkips}
+              hint={`${pct(a.skipRate)} of starts`}
+              icon={<CircleSlash />}
+              tone="amber"
+            />
+            <StatCard
+              label="Missing elements"
               value={a.elementNotFound}
-              hint="steps whose element was missing"
+              hint="Steps whose element was missing"
+              icon={<SearchX />}
+              tone="slate"
             />
           </div>
 
@@ -128,11 +137,11 @@ export default async function TourAnalyticsPage({
             <CardContent className="grid gap-3 sm:grid-cols-2">
               <div>
                 <p className="mb-1 text-sm">Completion rate</p>
-                <Bar value={a.completionRate} label="Completion rate" />
+                <Bar value={a.completionRate} label="Completion rate" tone="green" />
               </div>
               <div>
                 <p className="mb-1 text-sm">Skip rate</p>
-                <Bar value={a.skipRate} label="Skip rate" />
+                <Bar value={a.skipRate} label="Skip rate" tone="amber" />
               </div>
             </CardContent>
           </Card>
