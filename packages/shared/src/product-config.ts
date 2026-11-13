@@ -15,6 +15,8 @@ export const PRODUCT = {
     builderQueryParam: "tour_builder",
     previewQueryParam: "tour_preview",
     builderPassHashParam: "ptb_token",
+    /** ?tour_start=<tourId> opens the page with that tour running (links in emails, help docs). */
+    startQueryParam: "tour_start",
   },
   supportEmail: "support@example.com",
 } as const;

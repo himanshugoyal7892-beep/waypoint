@@ -17,6 +17,7 @@ interface WireEvent extends TrackInput {
   sessionId: string;
   currentUrl: string;
   timestamp: number;
+  visitorKey?: string;
 }
 
 const MAX_BATCH = 20;
@@ -39,7 +40,7 @@ export class EventQueue {
   constructor(
     private readonly endpoint: string,
     private readonly projectKey: string,
-    private readonly ids: () => { visitorId: string; sessionId: string },
+    private readonly ids: () => { visitorId: string; sessionId: string; visitorKey?: string },
     private enabled = true,
   ) {
     window.addEventListener("pagehide", this.onHide);
@@ -54,9 +55,10 @@ export class EventQueue {
     if (!this.enabled) return;
     const currentUrl = sanitizeTrackedUrl(location.href);
     if (!currentUrl) return;
-    const { visitorId, sessionId } = this.ids();
+    const { visitorId, sessionId, visitorKey } = this.ids();
     this.queue.push({
       ...input,
+      ...(visitorKey ? { visitorKey } : {}),
       clientEventId: randomId("e_"),
       anonymousVisitorId: visitorId,
       sessionId,

@@ -31,3 +31,12 @@ export const STEP_SCOPED_EVENTS: ReadonlySet<EventName> = new Set<EventName>([
   "back_clicked",
   "element_not_found",
 ]);
+
+export const AUDIENCES = ["ALL", "NEW_USERS", "DORMANT_USERS", "EXISTING_USERS"] as const;
+export type Audience = (typeof AUDIENCES)[number];
+
+export const FREQUENCIES = ["ONCE", "UNTIL_COMPLETED", "INTERVAL"] as const;
+export type Frequency = (typeof FREQUENCIES)[number];
+
+export const IDENTITY_SOURCES = ["NONE", "WINDOW", "DATALAYER", "COOKIE"] as const;
+export type IdentitySource = (typeof IDENTITY_SOURCES)[number];

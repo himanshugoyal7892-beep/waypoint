@@ -118,6 +118,8 @@ export default async function ProjectOverviewPage({
                 name: project.name,
                 domain: project.domain,
                 allowedOrigins: project.allowedOrigins,
+                identitySource: project.identitySource,
+                identityKey: project.identityKey,
               }}
             />
           </CardContent>

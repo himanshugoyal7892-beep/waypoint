@@ -31,3 +31,15 @@ describe("crypto helpers", () => {
     expect(randomBase62(100)).toMatch(/^[0-9A-Za-z]{100}$/);
   });
 });
+
+describe("visitorKeyFor", () => {
+  it("is stable, salted, and separates users from anonymous browsers", async () => {
+    const { visitorKeyFor } = await import("@/server/crypto");
+    const a = visitorKeyFor("salt1", { userId: "C1001", visitorId: "v_aaaaaaaa" });
+    expect(a).toMatch(/^[a-f0-9]{64}$/);
+    expect(visitorKeyFor("salt1", { userId: "C1001", visitorId: "v_bbbbbbbb" })).toBe(a);
+    expect(visitorKeyFor("salt2", { userId: "C1001", visitorId: "v_aaaaaaaa" })).not.toBe(a);
+    expect(visitorKeyFor("salt1", { visitorId: "C1001" })).not.toBe(a);
+    expect(a).not.toContain("C1001");
+  });
+});

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AnalyticsEventPayload } from "@waypoint/shared";
-import { clampOccurredAt, toEventRows } from "@/server/public/event-rows";
+import { clampOccurredAt, toEventRows, visitorStateDeltas } from "@/server/public/event-rows";
 
 const NOW = new Date("2026-11-10T12:00:00Z");
 const ev = (o: Partial<AnalyticsEventPayload> = {}): AnalyticsEventPayload => ({
@@ -55,5 +55,31 @@ describe("toEventRows", () => {
     const sneaky = { ...ev(), pageText: "secret" } as AnalyticsEventPayload;
     const { rows } = toEventRows("p1", [sneaky], steps, NOW);
     expect(Object.keys(rows[0] ?? {})).not.toContain("pageText");
+  });
+});
+
+describe("visitorStateDeltas", () => {
+  const K = "a".repeat(64);
+  it("counts showings and records finish/skip per tour and visitor", () => {
+    const d = visitorStateDeltas(
+      [
+        ev({ visitorKey: K, timestamp: NOW.getTime() - 5000 }),
+        ev({ visitorKey: K, eventName: "step_viewed", stepId: "s1", stepOrder: 1 }),
+        ev({ visitorKey: K, eventName: "tour_completed", timestamp: NOW.getTime() - 1000 }),
+        ev({ visitorKey: K, timestamp: NOW.getTime() - 2000 }),
+        ev({ tourId: "t2", visitorKey: K, eventName: "tour_skipped" }),
+        ev(), // no key: anonymous legacy client, ignored
+      ],
+      NOW,
+    );
+    expect(d).toHaveLength(2);
+    expect(d[0]).toMatchObject({
+      tourId: "t1",
+      showsIncrement: 2,
+      lastShownAt: new Date(NOW.getTime() - 2000),
+      completedAt: new Date(NOW.getTime() - 1000),
+      skippedAt: null,
+    });
+    expect(d[1]).toMatchObject({ tourId: "t2", showsIncrement: 0, skippedAt: expect.any(Date) });
   });
 });

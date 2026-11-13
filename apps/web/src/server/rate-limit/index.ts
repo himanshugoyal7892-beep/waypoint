@@ -9,6 +9,7 @@ import { UpstashRateLimiter } from "./upstash";
 export const POLICIES = {
   public_tours: { limit: 120, windowMs: 60_000 },
   public_events: { limit: 60, windowMs: 60_000 },
+  public_visits: { limit: 120, windowMs: 60_000 },
   /** Coarse per-IP cap applied before the body is parsed. */
   public_ip: { limit: 240, windowMs: 60_000 },
   builder: { limit: 300, windowMs: 60_000 },

@@ -1,5 +1,18 @@
 # Verification status
 
+## Phase 5: targeting, timing, links, user recognition. VERIFIED
+
+_Verified: 2026-11-13._ Details: `docs/phase-5-targeting.md`.
+
+| Check                                        | Result                                                                                                              |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `bash scripts/verify.sh`                     | PASS: migrate + no drift, lint, typecheck, **179 tests** (SDK 69, shared 70, web 40), format, bundles, `next build` |
+| Targeting in real Chrome (`targeting-check`) | **18/18 PASS**                                                                                                      |
+| Visitor tour regression (`browser-check`)    | **15/15 PASS**                                                                                                      |
+| Dashboard forms (targeting, identity)        | PASS: saved, defaults applied, missing-field error shown                                                            |
+| Bundles                                      | Visitor script **15.2 KB** gzip (budget 25 KB)                                                                      |
+| Redington logged-in data                     | NOT VERIFIED: needs the user to run the login check bookmark while logged in                                        |
+
 ## Phase 4: visual builder + analytics page. VERIFIED
 
 _Verified: 2026-11-11._

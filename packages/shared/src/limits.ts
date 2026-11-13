@@ -26,3 +26,6 @@ export const OPAQUE_ID_PATTERN = /^[A-Za-z0-9_-]{8,64}$/;
 
 /** Database ids (cuid) plus seed ids: conservative charset. */
 export const RESOURCE_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+
+/** Hashed visitor key (SHA-256 hex) issued by the visits endpoint. */
+export const VISITOR_KEY_PATTERN = /^[a-f0-9]{64}$/;

@@ -1,4 +1,11 @@
-import type { BuilderMode, EventName, Placement, TriggerType } from "./enums";
+import type {
+  BuilderMode,
+  EventName,
+  Frequency,
+  IdentitySource,
+  Placement,
+  TriggerType,
+} from "./enums";
 import type { PublishIssue } from "./publish-rules";
 
 /** Consistent error envelope returned by every API route. */
@@ -47,12 +54,27 @@ export interface PublicTour {
   version: number;
   name: string;
   triggerType: TriggerType;
+  frequency: Frequency;
   startUrl: string;
   steps: PublicTourStep[];
 }
 
+/** Where the SDK reads the logged-in user's id, if the project configured it. */
+export interface PublicIdentityConfig {
+  source: Exclude<IdentitySource, "NONE">;
+  key: string;
+}
+
 export interface PublicToursResponse {
   tours: PublicTour[];
+  identity: PublicIdentityConfig | null;
+}
+
+export interface VisitResponse {
+  /** Opaque hashed key; the SDK attaches it to analytics so the server can count showings. */
+  visitorKey: string;
+  /** Automatic tours this visitor may see in this visit (audience, timing and dates applied). */
+  eligibleTourIds: string[];
 }
 
 export interface InstallInstructions {
@@ -93,4 +115,5 @@ export interface AnalyticsEventPayload {
   currentUrl: string;
   timestamp: number;
   errorCode?: string;
+  visitorKey?: string;
 }

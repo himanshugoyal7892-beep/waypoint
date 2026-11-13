@@ -3,14 +3,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteTourButton } from "@/components/delete-buttons";
+import { CopyButton } from "@/components/common";
 import { TourForm } from "@/components/forms/tour-form";
+import { TourTargetingForm } from "@/components/forms/tour-targeting-form";
 import { EmptyState, PageHeader } from "@/components/layout";
 import { BuilderPassCard } from "@/components/tours/builder-pass-card";
 import { StepList } from "@/components/tours/step-list";
 import { TourStatusControls } from "@/components/tours/tour-status-controls";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { loadOr404 } from "@/lib/page-data";
+import { PRODUCT } from "@waypoint/shared/product-config";
 import { requirePageUser } from "@/server/auth";
 import { checkPublishable, getTour } from "@/server/services/tours";
 
@@ -38,6 +41,9 @@ export default async function TourPage({
     origins[0] ??
     "http://localhost:5173";
   const startPath = tour.startUrl.includes("*") ? "/" : tour.startUrl;
+  const linkPage = tour.steps[0]?.pageUrl ?? startPath;
+  const shareLink = `${firstOrigin}${linkPage}?${PRODUCT.sdk.startQueryParam}=${encodeURIComponent(tour.id)}`;
+  const day = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "");
 
   return (
     <>
@@ -126,6 +132,52 @@ export default async function TourPage({
                   triggerType: tour.triggerType,
                 }}
               />
+            </CardContent>
+          </Card>
+          <Card id="targeting">
+            <CardHeader>
+              <CardTitle>Who sees it and when</CardTitle>
+              <CardDescription>Rules for automatic tours.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TourTargetingForm
+                tourId={tour.id}
+                manual={tour.triggerType === "MANUAL"}
+                identityConfigured={tour.project.identitySource !== "NONE"}
+                projectHref={projectHref}
+                initial={{
+                  audience: tour.audience,
+                  audienceDays: tour.audienceDays?.toString() ?? "",
+                  audienceBefore: day(tour.audienceBefore),
+                  frequency: tour.frequency,
+                  maxShows: tour.maxShows?.toString() ?? "",
+                  intervalDays: tour.intervalDays?.toString() ?? "",
+                  startsAt: day(tour.startsAt),
+                  endsAt: day(tour.endsAt),
+                }}
+              />
+            </CardContent>
+          </Card>
+          <Card id="share-link">
+            <CardHeader>
+              <CardTitle>Start from a link</CardTitle>
+              <CardDescription>
+                Opens the page with this tour running, for anyone, whatever the rules above. Use it
+                in emails, help articles or support replies.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <code className="block break-all rounded-md bg-muted px-3 py-2 text-xs">
+                {shareLink}
+              </code>
+              <div className="flex items-center gap-3">
+                <CopyButton value={shareLink} label="Copy link" />
+                {tour.status !== "PUBLISHED" && (
+                  <span className="text-xs text-muted-foreground">
+                    Works once the tour is published.
+                  </span>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>

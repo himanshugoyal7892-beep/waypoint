@@ -7,7 +7,7 @@ import type { NextRequest } from "next/server";
 import { ApiError } from "@/server/http/errors";
 import { json, noContent, toErrorResponse } from "@/server/http/respond";
 import { PUBLIC_TOURS_CORS, corsHeaders, requestOrigin } from "@/server/public/cors-core";
-import { getEligibleTours, resolvePublicProject } from "@/server/public/tours";
+import { getEligibleTours, publicIdentity, resolvePublicProject } from "@/server/public/tours";
 import { enforceRateLimit } from "@/server/rate-limit";
 
 type Ctx = { params: Promise<{ publicKey: string }> };
@@ -28,7 +28,10 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     });
     const project = await resolvePublicProject(publicKey, origin);
     cors = corsHeaders(origin, true, PUBLIC_TOURS_CORS);
-    const body: PublicToursResponse = { tours: await getEligibleTours(project.id, path) };
+    const body: PublicToursResponse = {
+      tours: await getEligibleTours(project.id, path),
+      identity: publicIdentity(project),
+    };
     return json(body, {
       headers: {
         ...cors,

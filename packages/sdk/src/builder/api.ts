@@ -165,6 +165,7 @@ export function toPublicTour(t: BuilderTour): PublicTour {
     version: t.version,
     name: t.name,
     triggerType: "MANUAL",
+    frequency: "ONCE",
     startUrl: t.startUrl,
     steps: t.steps.map((s) => ({
       id: s.id,

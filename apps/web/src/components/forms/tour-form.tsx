@@ -117,7 +117,7 @@ export function TourForm({
           id="tour-trigger"
           label="Trigger"
           error={err("triggerType")}
-          hint="Automatic shows once per visitor. Manual starts from your code."
+          hint="Automatic follows the rules under “Who sees it and when”. Manual starts from a link or your code."
         >
           <NativeSelect
             {...controlProps("tour-trigger", err("triggerType"), "hint")}
@@ -125,7 +125,7 @@ export function TourForm({
             onChange={set("triggerType")}
           >
             <option value="AUTO">Automatic</option>
-            <option value="MANUAL">Manual (ProductTour.start)</option>
+            <option value="MANUAL">Manual (link or ProductTour.start)</option>
           </NativeSelect>
         </Field>
       </div>

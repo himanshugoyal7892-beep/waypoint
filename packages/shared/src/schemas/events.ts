@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { EVENT_NAMES, STEP_SCOPED_EVENTS } from "../enums";
-import { LIMITS, OPAQUE_ID_PATTERN, PUBLIC_KEY_PATTERN } from "../limits";
+import { LIMITS, OPAQUE_ID_PATTERN, PUBLIC_KEY_PATTERN, VISITOR_KEY_PATTERN } from "../limits";
 import { sanitizeTrackedUrl } from "../url";
 import { resourceId } from "./common";
 
@@ -39,6 +39,8 @@ export const analyticsEventSchema = z
       .string()
       .regex(/^[a-z0-9_]{1,64}$/)
       .optional(),
+    /** Hashed visitor key returned by the visits endpoint (not personal data). */
+    visitorKey: z.string().regex(VISITOR_KEY_PATTERN).optional(),
   })
   .strict()
   .superRefine((e, ctx) => {
@@ -74,3 +76,31 @@ export const publicToursQuerySchema = z.object({
       "path must be a pathname.",
     ),
 });
+
+/** Body of POST /api/public/v1/visits (sent as text/plain, like analytics). */
+export const visitRequestSchema = z
+  .object({
+    projectKey: publicKeySchema,
+    visitorId: opaqueId("visitorId"),
+    /** The site's own user id, read by the SDK or passed to ProductTour.identify(). Hashed on arrival. */
+    userId: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().min(1).max(200))
+      .optional(),
+    signedUpAt: z
+      .string()
+      .max(40)
+      .optional()
+      .transform((s, ctx) => {
+        if (!s) return undefined;
+        const d = new Date(s);
+        if (Number.isNaN(d.getTime()) || d.getTime() > Date.now() + 86_400_000) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "signedUpAt must be a past date." });
+          return z.NEVER;
+        }
+        return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+      }),
+  })
+  .strict();
+export type VisitRequest = z.infer<typeof visitRequestSchema>;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { IDENTITY_SOURCES } from "../enums";
 import { LIMITS } from "../limits";
 import { explainInvalidOrigin, normalizeOrigin } from "../origins";
 import { requiredPlainText } from "./common";
@@ -44,7 +45,58 @@ export const createProjectSchema = z.object({
 });
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 
+const IDENTITY_KEY_PATTERNS = {
+  // Dot path on window, e.g. userId or app.user.id. Read only; never executed.
+  WINDOW: /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*){0,5}$/,
+  DATALAYER: /^[\w.-]{1,100}$/,
+  COOKIE: /^[\w.-]{1,100}$/,
+} as const;
+
+/** Where the SDK finds the logged-in user's id on the customer's site. */
+export const identitySchema = z
+  .object({
+    identitySource: z.enum(IDENTITY_SOURCES),
+    identityKey: z.union([z.string(), z.null()]).transform((v) => (v ?? "").trim() || null),
+  })
+  .superRefine((v, ctx) => {
+    if (v.identitySource === "NONE") return;
+    const pattern = IDENTITY_KEY_PATTERNS[v.identitySource];
+    if (!v.identityKey || !pattern.test(v.identityKey))
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["identityKey"],
+        message:
+          v.identitySource === "WINDOW"
+            ? "Enter a variable name such as userId or app.user.id."
+            : "Enter a field or cookie name (letters, numbers, _ . -).",
+      });
+  })
+  .transform((v) => (v.identitySource === "NONE" ? { ...v, identityKey: null } : v));
+export type IdentityInput = z.infer<typeof identitySchema>;
+
 export const updateProjectSchema = createProjectSchema
   .partial()
-  .refine((v) => Object.keys(v).length > 0, "Provide at least one field to update.");
+  .extend({
+    identitySource: z.enum(IDENTITY_SOURCES).optional(),
+    identityKey: z.union([z.string(), z.null()]).optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, "Provide at least one field to update.")
+  .superRefine((v, ctx) => {
+    if (v.identitySource === undefined && v.identityKey === undefined) return;
+    const r = identitySchema.safeParse({
+      identitySource: v.identitySource ?? "NONE",
+      identityKey: v.identityKey ?? null,
+    });
+    if (!r.success) for (const i of r.error.issues) ctx.addIssue(i);
+  })
+  .transform((v) => {
+    if (v.identitySource === undefined && v.identityKey === undefined) return v;
+    return {
+      ...v,
+      ...identitySchema.parse({
+        identitySource: v.identitySource ?? "NONE",
+        identityKey: v.identityKey ?? null,
+      }),
+    };
+  });
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;

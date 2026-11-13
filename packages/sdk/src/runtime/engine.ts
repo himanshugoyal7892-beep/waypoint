@@ -7,6 +7,11 @@ import { findElement, isInViewport, type FindResult } from "./find-element";
 
 export interface EngineDeps {
   loadTours(path: string): Promise<PublicTour[]>;
+  /**
+   * Automatic tours the server says this visitor may see in this visit (audience, timing and
+   * date rules). Null means "unknown" (old server, offline): fall back to once per browser.
+   */
+  eligibleTours?(): Promise<Set<string> | null>;
   analytics: Pick<EventQueue, "track" | "flush">;
   local: KeyValueStore;
   session: KeyValueStore;
@@ -85,13 +90,23 @@ export class TourEngine {
           return; // in progress, but not on this page
         }
       }
-      const eligible = this.tours.find(
+      const candidates = this.tours.filter(
         (t) =>
           t.triggerType === "AUTO" &&
           t.steps.length > 0 &&
-          !this.deps.local.get(`seen:${t.id}`) &&
+          !this.deps.session.get(`shown:${t.id}`) &&
           matchPathPattern(t.startUrl, currentPath()) &&
           onThisPage(t.steps[0]!.pageUrl),
+      );
+      if (!candidates.length) return;
+      const allowed = this.deps.eligibleTours ? await this.deps.eligibleTours() : null;
+      if (gen !== this.generation || this.active) return;
+      const eligible = candidates.find((t) =>
+        allowed
+          ? allowed.has(t.id) &&
+            // "Once" tours also honour this browser's memory from before targeting existed.
+            !(t.frequency === "ONCE" && this.deps.local.get(`seen:${t.id}`))
+          : !this.deps.local.get(`seen:${t.id}`),
       );
       if (eligible) this.begin(eligible, 0, true);
     } catch (err) {
@@ -134,7 +149,10 @@ export class TourEngine {
 
   /** window.ProductTour.reset(): forgets completed/skipped tours and progress for this visitor. */
   reset() {
-    for (const t of this.tours) this.deps.local.remove(`seen:${t.id}`);
+    for (const t of this.tours) {
+      this.deps.local.remove(`seen:${t.id}`);
+      this.deps.session.remove(`shown:${t.id}`);
+    }
     this.deps.session.remove("active");
   }
 
@@ -155,7 +173,11 @@ export class TourEngine {
     });
     ui.hide();
     this.active = { tour, index, ui, abort: new AbortController(), pendingDirection: null };
-    if (fresh) this.track(tour, "tour_started");
+    if (fresh) {
+      this.track(tour, "tour_started");
+      // Never auto-show the same tour twice in one visit, whatever the rules allow.
+      this.deps.session.set(`shown:${tour.id}`, "1");
+    }
     this.safeShow(index, 1);
   }
 

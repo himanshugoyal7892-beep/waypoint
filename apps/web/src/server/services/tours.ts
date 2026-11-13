@@ -1,6 +1,11 @@
 import "server-only";
 import type { Prisma, TourStatus } from "@prisma/client";
-import { validatePublishable, type CreateTourInput, type UpdateTourInput } from "@waypoint/shared";
+import {
+  targetingIssues,
+  validatePublishable,
+  type CreateTourInput,
+  type UpdateTourInput,
+} from "@waypoint/shared";
 import { db } from "../db";
 import { ApiError, conflict } from "../http/errors";
 import { ownProject, ownTour } from "../ownership";
@@ -13,6 +18,14 @@ export const tourSelect = {
   status: true,
   startUrl: true,
   triggerType: true,
+  audience: true,
+  audienceDays: true,
+  audienceBefore: true,
+  frequency: true,
+  maxShows: true,
+  intervalDays: true,
+  startsAt: true,
+  endsAt: true,
   version: true,
   createdAt: true,
   updatedAt: true,
@@ -57,13 +70,25 @@ export async function getTour(userId: string, tourId: string) {
     select: {
       ...tourSelect,
       steps: { orderBy: { stepOrder: "asc" }, select: stepSelect },
-      project: { select: { id: true, name: true, allowedOrigins: true, publicKey: true } },
+      project: {
+        select: {
+          id: true,
+          name: true,
+          allowedOrigins: true,
+          publicKey: true,
+          identitySource: true,
+        },
+      },
     },
   });
 }
 
 export async function updateTour(userId: string, tourId: string, input: UpdateTourInput) {
   await ownTour(userId, tourId);
+  const current = await db.tour.findUniqueOrThrow({ where: { id: tourId }, select: tourSelect });
+  const issues = targetingIssues({ ...current, ...input });
+  if (issues.length)
+    throw new ApiError(400, "VALIDATION_ERROR", "Some targeting settings are incomplete.", issues);
   return db.tour.update({ where: { id: tourId }, data: input, select: tourSelect });
 }
 

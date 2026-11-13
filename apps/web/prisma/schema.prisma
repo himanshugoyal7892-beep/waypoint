@@ -22,6 +22,26 @@ enum TriggerType {
   MANUAL
 }
 
+enum Audience {
+  ALL
+  NEW_USERS
+  DORMANT_USERS
+  EXISTING_USERS
+}
+
+enum Frequency {
+  ONCE
+  UNTIL_COMPLETED
+  INTERVAL
+}
+
+enum IdentitySource {
+  NONE
+  WINDOW
+  DATALAYER
+  COOKIE
+}
+
 enum Placement {
   TOP
   BOTTOM
@@ -64,6 +84,11 @@ model Project {
   domain         String   @db.VarChar(253)
   allowedOrigins String[]
   publicKey      String   @unique @db.VarChar(40)
+  /// Where the SDK reads the logged-in user's id on the customer site (no code change needed).
+  identitySource IdentitySource @default(NONE)
+  identityKey    String?        @db.VarChar(100)
+  /// Per-project salt for hashing user and visitor ids. Raw user ids are never stored.
+  identitySalt   String         @default(dbgenerated("replace((gen_random_uuid())::text, '-'::text, ''::text)")) @db.VarChar(64)
   createdById    String
   createdBy      User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
   createdAt      DateTime @default(now())
@@ -72,6 +97,7 @@ model Project {
   tours           Tour[]
   events          AnalyticsEvent[]
   builderSessions BuilderSession[]
+  visitors        VisitorProfile[]
 
   @@index([createdById])
   @@index([allowedOrigins], type: Gin)
@@ -86,6 +112,15 @@ model Tour {
   status      TourStatus  @default(DRAFT)
   startUrl    String      @db.VarChar(2048)
   triggerType TriggerType @default(AUTO)
+  /// Targeting, applied to automatic tours. Dates are whole UTC days.
+  audience       Audience  @default(ALL)
+  audienceDays   Int?
+  audienceBefore DateTime? @db.Date
+  frequency      Frequency @default(ONCE)
+  maxShows       Int?
+  intervalDays   Int?
+  startsAt       DateTime? @db.Date
+  endsAt         DateTime? @db.Date
   version     Int         @default(1)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -95,6 +130,7 @@ model Tour {
   steps           TourStep[]
   events          AnalyticsEvent[]
   builderSessions BuilderSession[]
+  visitorStates   TourVisitorState[]
 
   @@index([projectId, status])
 }
@@ -163,4 +199,34 @@ model AnalyticsEvent {
   @@unique([projectId, clientEventId])
   @@index([tourId, eventName, occurredAt])
   @@index([tourId, stepOrder, eventName])
+}
+
+/// One row per visitor per project. visitorKey is an HMAC-style SHA-256 of the project salt and
+/// either the site's user id ("u:") or the anonymous browser id ("a:"); raw ids are not stored.
+model VisitorProfile {
+  id              String    @id @default(cuid())
+  projectId       String
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  visitorKey      String    @db.Char(64)
+  identified      Boolean   @default(false)
+  firstSeenAt     DateTime
+  lastSeenAt      DateTime
+  visitStartedAt  DateTime
+  previousVisitAt DateTime?
+  signedUpAt      DateTime? @db.Date
+
+  @@unique([projectId, visitorKey])
+}
+
+/// How often a visitor has been shown a tour, and whether they finished or skipped it.
+model TourVisitorState {
+  tourId      String
+  tour        Tour      @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  visitorKey  String    @db.Char(64)
+  shows       Int       @default(0)
+  lastShownAt DateTime?
+  completedAt DateTime?
+  skippedAt   DateTime?
+
+  @@id([tourId, visitorKey])
 }

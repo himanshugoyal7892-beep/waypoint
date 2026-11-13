@@ -26,6 +26,7 @@ const tour = (over: Partial<PublicTour> = {}): PublicTour => ({
   version: 3,
   name: "Demo",
   triggerType: "AUTO",
+  frequency: "ONCE",
   startUrl: "/",
   steps: [step(1), step(2), step(3)],
   ...over,
@@ -425,5 +426,66 @@ describe("host page removing our UI", () => {
     engine.stop();
     await tick();
     expect(host()).toBeNull(); // our own removal is not undone
+  });
+});
+
+describe("targeting (server-decided eligibility)", () => {
+  it("only auto-starts tours the server allows for this visit", async () => {
+    addTargets("t1", "t2", "t3");
+    const blocked = tour({ id: "blocked" });
+    const allowed = tour({ id: "allowed", frequency: "INTERVAL" });
+    const { engine } = setup([blocked, allowed], {
+      eligibleTours: async () => new Set(["allowed"]),
+    });
+    await engine.evaluate();
+    await tick();
+    expect(q(".title")?.textContent).toBe("Title 1");
+    expect(sessionStorage.getItem("ptour:shown:allowed")).toBe("1");
+    expect(sessionStorage.getItem("ptour:shown:blocked")).toBeNull();
+  });
+
+  it("shows nothing when the server allows nothing", async () => {
+    addTargets("t1", "t2", "t3");
+    const { engine } = setup([tour()], { eligibleTours: async () => new Set() });
+    await engine.evaluate();
+    await tick();
+    expect(host()).toBeNull();
+  });
+
+  it("never auto-shows the same tour twice in one visit, even if allowed", async () => {
+    addTargets("t1", "t2", "t3");
+    const t = tour({ frequency: "UNTIL_COMPLETED" });
+    const { engine } = setup([t], { eligibleTours: async () => new Set([t.id]) });
+    await engine.evaluate();
+    await tick();
+    click("Skip");
+    expect(host()).toBeNull();
+    history.replaceState({}, "", "/other");
+    history.replaceState({}, "", "/");
+    await engine.evaluate();
+    await tick();
+    expect(host()).toBeNull();
+  });
+
+  it("repeating tours ignore the old once-per-browser flag; 'once' tours keep it", async () => {
+    addTargets("t1", "t2", "t3");
+    localStorage.setItem("ptour:seen:rep", "skipped");
+    localStorage.setItem("ptour:seen:once", "skipped");
+    const { engine } = setup([tour({ id: "once" }), tour({ id: "rep", frequency: "INTERVAL" })], {
+      eligibleTours: async () => new Set(["once", "rep"]),
+    });
+    await engine.evaluate();
+    await tick();
+    expect(sessionStorage.getItem("ptour:shown:rep")).toBe("1");
+    expect(sessionStorage.getItem("ptour:shown:once")).toBeNull();
+  });
+
+  it("falls back to once-per-browser when the server can't be reached", async () => {
+    addTargets("t1", "t2", "t3");
+    localStorage.setItem("ptour:seen:tour1", "completed");
+    const { engine } = setup([tour()], { eligibleTours: async () => null });
+    await engine.evaluate();
+    await tick();
+    expect(host()).toBeNull();
   });
 });

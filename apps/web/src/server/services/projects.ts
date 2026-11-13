@@ -11,6 +11,8 @@ export const projectSelect = {
   domain: true,
   allowedOrigins: true,
   publicKey: true,
+  identitySource: true,
+  identityKey: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.ProjectSelect;

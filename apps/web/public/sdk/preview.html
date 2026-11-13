@@ -125,6 +125,21 @@
       </div>
 
       <div class="card">
+        <h2>Check what your site knows about the logged-in user</h2>
+        <p class="muted">
+          Waypoint can recognise logged-in users without changing the site's code, if the pages
+          already hold a user id. Drag this button to your bookmarks bar, log in to the website,
+          then click it. It lists the ids it finds. Email addresses and phone numbers are hidden,
+          and nothing is sent anywhere.
+        </p>
+        <a id="checkBookmarklet" class="bm" href="#">🔎 Waypoint login check</a>
+        <p class="muted">
+          Then, in Waypoint, open the project and set <strong>Recognise logged-in users</strong> to
+          what it suggests.
+        </p>
+      </div>
+
+      <div class="card">
         <h2>Set it up once</h2>
         <ol>
           <li>
@@ -206,9 +221,9 @@
             ";" +
             (builder
               ? "if(window.__ptourBuilderActive)return;"
-              : "try{for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&k.indexOf('ptour:seen:')===0)localStorage.removeItem(k)}}catch(e){}") +
+              : "try{for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&k.indexOf('ptour:seen:')===0)localStorage.removeItem(k)}for(var j=sessionStorage.length-1;j>=0;j--){var q=sessionStorage.key(j);if(q&&(q.indexOf('ptour:shown:')===0||q==='ptour:visit'))sessionStorage.removeItem(q)}}catch(e){}") +
             "if(window.ProductTour&&window.ProductTour.destroy)window.ProductTour.destroy();window.__ptourLoaded=false;" +
-            "window.ProductTourConfig={projectId:K,debug:true" +
+            "window.ProductTourConfig={projectId:K,debug:true,preview:true" +
             (builder ? ",builder:true" : "") +
             "};" +
             "var s=document.createElement('script');s.async=true;s.src=B+'/sdk/product-tour.js?v='+Date.now();" +
@@ -235,6 +250,117 @@
               : "Enter a valid key to activate the button.";
           }
         }
+
+        // Login check: runs entirely in the visitor's browser and only displays results.
+        function loginCheck() {
+          var EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+          var PHONE = /^\+?[\d\s()-]{8,}$/;
+          var IDLIKE =
+            /(^|_)(user|customer|cust|client|member|account|company|partner)(_?(id|code|no|number))?$|^(uid|userid|user_id|customerid|customer_id|customer_code|company_code)$/i;
+          function show(v) {
+            var s = String(v);
+            if (EMAIL.test(s)) return "an email address (hidden, don't use)";
+            if (PHONE.test(s)) return "a phone number (hidden, don't use)";
+            return s.length <= 4
+              ? s.replace(/./g, "•")
+              : s.slice(0, 2) + "…" + s.slice(-2) + " (" + s.length + " characters)";
+          }
+          function filled(v) {
+            return (
+              (typeof v === "string" || typeof v === "number") &&
+              String(v).trim() !== "" &&
+              !/^(null|undefined|0|false|guest)$/i.test(String(v).trim())
+            );
+          }
+          var rows = [];
+          Object.keys(window).forEach(function (k) {
+            try {
+              if (IDLIKE.test(k) || /^(user|customer)(Id|ID|Code|Email)$/.test(k)) {
+                var v = window[k];
+                if (filled(v)) rows.push(["Page variable", k, show(v), !EMAIL.test(String(v))]);
+              }
+            } catch (e) {}
+          });
+          var dl = Array.isArray(window.dataLayer) ? window.dataLayer : [];
+          var seen = {};
+          for (var i = dl.length - 1; i >= 0; i--) {
+            var e = dl[i];
+            if (!e || typeof e !== "object" || Array.isArray(e)) continue;
+            Object.keys(e).forEach(function (k) {
+              if (seen[k] || !(IDLIKE.test(k) || /email|mobile|phone/i.test(k))) return;
+              if (filled(e[k])) {
+                seen[k] = 1;
+                rows.push([
+                  "Google Tag Manager field",
+                  k,
+                  show(e[k]),
+                  !EMAIL.test(String(e[k])) && !PHONE.test(String(e[k])),
+                ]);
+              }
+            });
+          }
+          document.cookie.split(";").forEach(function (c) {
+            var n = c.split("=")[0].trim();
+            var v = c.slice(c.indexOf("=") + 1).trim();
+            if (n && IDLIKE.test(n) && filled(v))
+              rows.push(["Cookie", n, show(decodeURIComponent(v)), true]);
+          });
+          var old = document.getElementById("__wp_login_check");
+          if (old) old.remove();
+          var box = document.createElement("div");
+          box.id = "__wp_login_check";
+          box.setAttribute(
+            "style",
+            "position:fixed;z-index:2147483647;top:16px;right:16px;width:440px;max-height:80vh;overflow:auto;background:#fff;color:#1b1f4b;border:2px solid #4a44d6;border-radius:12px;padding:16px;font:14px/1.45 system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.25)",
+          );
+          function el(tag, text, style) {
+            var n = document.createElement(tag);
+            n.textContent = text;
+            if (style) n.setAttribute("style", style);
+            box.appendChild(n);
+            return n;
+          }
+          el("strong", "Waypoint login check", "display:block;font-size:16px;margin-bottom:6px");
+          if (!rows.length) {
+            el(
+              "p",
+              "No user ids found on this page. Are you logged in? Try again on a page after login.",
+            );
+          } else {
+            var best = rows.filter(function (r) {
+              return r[3];
+            })[0];
+            if (best)
+              el(
+                "p",
+                "Suggested setting: " + best[0] + " → " + best[1],
+                "margin:0 0 10px;padding:8px;background:#eef;border-radius:8px;font-weight:600",
+              );
+            rows.forEach(function (r) {
+              el(
+                "div",
+                r[0] + " · " + r[1] + " = " + r[2],
+                "padding:4px 0;border-top:1px solid #e1e4f2;font-family:ui-monospace,monospace;font-size:12px",
+              );
+            });
+          }
+          var close = el(
+            "button",
+            "Close",
+            "margin-top:10px;padding:6px 12px;border:1px solid #c9cce6;border-radius:6px;background:#f5f6fc;cursor:pointer",
+          );
+          close.onclick = function () {
+            box.remove();
+          };
+          document.body.appendChild(box);
+        }
+        var checkLink = document.getElementById("checkBookmarklet");
+        checkLink.href =
+          "javascript:" + encodeURIComponent("(" + loginCheck.toString() + ")();void 0");
+        checkLink.addEventListener("click", function (e) {
+          e.preventDefault();
+          loginCheck();
+        });
 
         [link, builderLink].forEach(function (a) {
           a.addEventListener("click", function (e) {

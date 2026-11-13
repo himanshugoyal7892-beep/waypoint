@@ -52,6 +52,14 @@ describe("tour schemas", () => {
         startUrl: "/products/*",
         description: null,
         triggerType: "AUTO",
+        audience: "ALL",
+        audienceDays: null,
+        audienceBefore: null,
+        frequency: "ONCE",
+        maxShows: null,
+        intervalDays: null,
+        startsAt: null,
+        endsAt: null,
       },
     );
   });
