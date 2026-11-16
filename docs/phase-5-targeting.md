@@ -135,3 +135,19 @@ Verified locally: `verify.sh` green (shared 70, web 41, sdk 69 tests). Targeting
   7. Brand colour
   8. First completion
 - **Verified:** `verify.sh` green (web tests 50, including 9 for insights). All screens rendered locally with real data and reviewed, with auth bypassed temporarily and then restored.
+
+## Theme and tip appearance
+
+**Dashboard theme.** The sidebar footer has a three-way switch: Match computer, Light, Dark. The choice is saved in the browser (`wp-theme` in localStorage) and applied before the page paints (`public/theme-init.js`), so there is no flash. All dashboard colours come from tokens in `globals.css`; the `.dark` class swaps them.
+
+**Visitor tips.** Project → Settings → Tour display, with a live preview:
+
+| Setting | Options | Default |
+|---|---|---|
+| Tip style | Light, Dark, Brand colour | Light |
+| Corners | Rounded, Soft, Square | Rounded |
+| Progress | "2 of 4", Dots, Bar, Hidden | "2 of 4" |
+| Font | Standard, Same as website | Standard |
+| Dim the page | on / off | on |
+
+The public tours API returns these as `settings.tip`; the SDK whitelists the values and sets CSS variables on the tooltip (`@waypoint/shared/tip-theme`, shared by the SDK and the dashboard preview). Screen readers always hear "N of M", whatever the progress style. The visitor script is now 16.9 KB gzipped (budget 25 KB).
