@@ -48,9 +48,46 @@ export default async function InstallPage({ params }: { params: Promise<{ projec
             </span>
           </div>
           <Alert tone="info">
-            The SDK bundle at <code>{install.sdkUrl}</code> is delivered in Phase 3. Until then the
-            snippet loads nothing.
+            Tours and analytics only work on the origins listed in step 2. Tours that are{" "}
+            <strong>published</strong> and <strong>automatic</strong> start showing to visitors as
+            soon as the snippet is live.
           </Alert>
+        </CardContent>
+      </Card>
+
+      <Card id="gtm">
+        <CardHeader>
+          <CardTitle>Or install with Google Tag Manager</CardTitle>
+          <CardDescription>
+            No website release needed. Anyone with publish rights on the site&apos;s Tag Manager
+            container can do this.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ol className="list-decimal space-y-2 pl-5 text-sm">
+            <li>
+              In Tag Manager, open <strong>Tags → New</strong> and choose{" "}
+              <strong>Custom HTML</strong>. Name it &quot;{PRODUCT.name}&quot;.
+            </li>
+            <li>Paste the snippet above into the HTML box.</li>
+            <li>
+              Under <strong>Triggering</strong>, choose <strong>All Pages</strong>. Don&apos;t add a
+              &quot;History Change&quot; trigger: {PRODUCT.name} follows page changes by itself.
+            </li>
+            <li>
+              Click <strong>Preview</strong> and open your site from the Tag Assistant window. The
+              tag only runs in that window, so you can test safely.
+            </li>
+            <li>
+              When it works, click <strong>Submit → Publish</strong>. To switch {PRODUCT.name} off
+              later, pause the tag and publish again.
+            </li>
+          </ol>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Tip: for a quiet first launch, set tours to <strong>Manual</strong>. Visitors see
+            nothing, and your team can still open each tour with its &quot;Start from a link&quot;
+            URL.
+          </p>
         </CardContent>
       </Card>
 
