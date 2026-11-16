@@ -21,6 +21,11 @@ export async function resolvePublicProject(publicKey: string, origin: string | n
       identitySalt: true,
       maxAutoToursPerVisit: true,
       themeColor: true,
+      tipStyle: true,
+      tipCorners: true,
+      tipProgress: true,
+      tipFont: true,
+      tipBackdrop: true,
     },
   });
   if (!project) throw notFound("Project");

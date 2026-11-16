@@ -7,6 +7,7 @@ import * as React from "react";
 import type { ZodTypeAny } from "zod";
 import { Field, FormError, controlProps } from "@/components/field";
 import { Button } from "@/components/ui/button";
+import { TipPreview } from "@/components/tip-preview";
 import { Input, NativeSelect, Textarea } from "@/components/ui/input";
 import { Alert } from "@/components/ui/misc";
 import { apiFetch } from "@/lib/api-client";
@@ -22,6 +23,11 @@ interface Values {
   identityKey: string;
   maxAutoToursPerVisit: string;
   themeColor: string;
+  tipStyle: "LIGHT" | "DARK" | "BRAND";
+  tipCorners: "ROUNDED" | "SOFT" | "SQUARE";
+  tipProgress: "COUNTER" | "DOTS" | "BAR" | "NONE";
+  tipFont: "SYSTEM" | "SITE";
+  tipBackdrop: boolean;
 }
 
 const IDENTITY_HELP: Record<IdentitySource, React.ReactNode> = {
@@ -61,6 +67,11 @@ export function ProjectForm({
     identityKey?: string | null;
     maxAutoToursPerVisit?: number | null;
     themeColor?: string | null;
+    tipStyle?: Values["tipStyle"];
+    tipCorners?: Values["tipCorners"];
+    tipProgress?: Values["tipProgress"];
+    tipFont?: Values["tipFont"];
+    tipBackdrop?: boolean;
   };
 }) {
   const router = useRouter();
@@ -72,6 +83,11 @@ export function ProjectForm({
     identityKey: initial.identityKey ?? "",
     maxAutoToursPerVisit: initial.maxAutoToursPerVisit?.toString() ?? "",
     themeColor: initial.themeColor ?? "",
+    tipStyle: initial.tipStyle ?? "LIGHT",
+    tipCorners: initial.tipCorners ?? "ROUNDED",
+    tipProgress: initial.tipProgress ?? "COUNTER",
+    tipFont: initial.tipFont ?? "SYSTEM",
+    tipBackdrop: initial.tipBackdrop ?? true,
   });
   const [saved, setSaved] = React.useState(false);
   const schema: ZodTypeAny = mode === "create" ? createProjectSchema : updateProjectSchema;
@@ -111,6 +127,11 @@ export function ProjectForm({
             identityKey: values.identityKey,
             maxAutoToursPerVisit: values.maxAutoToursPerVisit,
             themeColor: values.themeColor,
+            tipStyle: values.tipStyle,
+            tipCorners: values.tipCorners,
+            tipProgress: values.tipProgress,
+            tipFont: values.tipFont,
+            tipBackdrop: values.tipBackdrop,
           }
         : {}),
     });
@@ -229,6 +250,9 @@ export function ProjectForm({
       {mode === "edit" && (
         <fieldset id="display" className="space-y-4 rounded-lg border border-border p-4">
           <legend className="px-1 text-sm font-semibold">Tour display</legend>
+          <p className="text-sm text-muted-foreground">
+            How tips look to your visitors, and how often they appear.
+          </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
               id="maxAutoToursPerVisit"
@@ -274,6 +298,90 @@ export function ProjectForm({
                 />
               </div>
             </Field>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="grid content-start gap-4 sm:grid-cols-2">
+              <Field id="tipStyle" label="Tip style">
+                <NativeSelect
+                  id="tipStyle"
+                  value={values.tipStyle}
+                  onChange={(e) =>
+                    setValues((v) => ({ ...v, tipStyle: e.target.value as Values["tipStyle"] }))
+                  }
+                >
+                  <option value="LIGHT">Light</option>
+                  <option value="DARK">Dark</option>
+                  <option value="BRAND">Brand colour</option>
+                </NativeSelect>
+              </Field>
+              <Field id="tipCorners" label="Corners">
+                <NativeSelect
+                  id="tipCorners"
+                  value={values.tipCorners}
+                  onChange={(e) =>
+                    setValues((v) => ({ ...v, tipCorners: e.target.value as Values["tipCorners"] }))
+                  }
+                >
+                  <option value="ROUNDED">Rounded</option>
+                  <option value="SOFT">Soft</option>
+                  <option value="SQUARE">Square</option>
+                </NativeSelect>
+              </Field>
+              <Field id="tipProgress" label="Progress">
+                <NativeSelect
+                  id="tipProgress"
+                  value={values.tipProgress}
+                  onChange={(e) =>
+                    setValues((v) => ({
+                      ...v,
+                      tipProgress: e.target.value as Values["tipProgress"],
+                    }))
+                  }
+                >
+                  <option value="COUNTER">“2 of 4”</option>
+                  <option value="DOTS">Dots</option>
+                  <option value="BAR">Bar</option>
+                  <option value="NONE">Hidden</option>
+                </NativeSelect>
+              </Field>
+              <Field id="tipFont" label="Font">
+                <NativeSelect
+                  id="tipFont"
+                  value={values.tipFont}
+                  onChange={(e) =>
+                    setValues((v) => ({ ...v, tipFont: e.target.value as Values["tipFont"] }))
+                  }
+                >
+                  <option value="SYSTEM">Standard</option>
+                  <option value="SITE">Same as website</option>
+                </NativeSelect>
+              </Field>
+              <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                <input
+                  type="checkbox"
+                  className="size-4 accent-[var(--color-primary)]"
+                  checked={values.tipBackdrop}
+                  onChange={(e) => setValues((v) => ({ ...v, tipBackdrop: e.target.checked }))}
+                />
+                Dim the rest of the page while a tip is open
+              </label>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-sm font-medium">Preview</p>
+              <TipPreview
+                brand={values.themeColor || null}
+                tip={{
+                  style: values.tipStyle,
+                  corners: values.tipCorners,
+                  progress: values.tipProgress,
+                  font: values.tipFont,
+                  backdrop: values.tipBackdrop,
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                “Same as website” uses your site&apos;s own font on the live page.
+              </p>
+            </div>
           </div>
         </fieldset>
       )}

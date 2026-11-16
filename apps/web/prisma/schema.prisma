@@ -47,6 +47,30 @@ enum DeviceTarget {
   MOBILE
 }
 
+enum TipStyle {
+  LIGHT
+  DARK
+  BRAND
+}
+
+enum TipCorners {
+  ROUNDED
+  SOFT
+  SQUARE
+}
+
+enum TipProgress {
+  COUNTER
+  DOTS
+  BAR
+  NONE
+}
+
+enum TipFont {
+  SYSTEM
+  SITE
+}
+
 enum IdentitySource {
   NONE
   WINDOW
@@ -105,6 +129,13 @@ model Project {
   maxAutoToursPerVisit Int?
   /// Brand colour for tour buttons and highlight, "#RRGGBB" (null = Waypoint default).
   themeColor           String? @db.VarChar(7)
+  /// How tour tips look on the customer's site.
+  tipStyle             TipStyle    @default(LIGHT)
+  tipCorners           TipCorners  @default(ROUNDED)
+  tipProgress          TipProgress @default(COUNTER)
+  tipFont              TipFont     @default(SYSTEM)
+  /// Dim the rest of the page around the highlighted element.
+  tipBackdrop          Boolean     @default(true)
   createdById    String
   createdBy      User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
   createdAt      DateTime @default(now())

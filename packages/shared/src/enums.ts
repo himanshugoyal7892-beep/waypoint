@@ -49,3 +49,12 @@ export const DESKTOP_MIN_WIDTH = 1024;
 
 export const IDENTITY_SOURCES = ["NONE", "WINDOW", "DATALAYER", "COOKIE"] as const;
 export type IdentitySource = (typeof IDENTITY_SOURCES)[number];
+
+export const TIP_STYLES = ["LIGHT", "DARK", "BRAND"] as const;
+export type TipStyle = (typeof TIP_STYLES)[number];
+export const TIP_CORNERS = ["ROUNDED", "SOFT", "SQUARE"] as const;
+export type TipCorners = (typeof TIP_CORNERS)[number];
+export const TIP_PROGRESS = ["COUNTER", "DOTS", "BAR", "NONE"] as const;
+export type TipProgress = (typeof TIP_PROGRESS)[number];
+export const TIP_FONTS = ["SYSTEM", "SITE"] as const;
+export type TipFont = (typeof TIP_FONTS)[number];

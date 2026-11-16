@@ -10,7 +10,8 @@
     "./api-types": "./src/api-types.ts",
     "./limits": "./src/limits.ts",
     "./enums": "./src/enums.ts",
-    "./publish-rules": "./src/publish-rules.ts"
+    "./publish-rules": "./src/publish-rules.ts",
+    "./tip-theme": "./src/tip-theme.ts"
   },
   "scripts": {
     "lint": "eslint .",

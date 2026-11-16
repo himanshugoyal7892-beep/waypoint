@@ -34,6 +34,13 @@ export async function GET(req: NextRequest, ctx: Ctx) {
       settings: {
         maxAutoToursPerVisit: project.maxAutoToursPerVisit,
         themeColor: project.themeColor,
+        tip: {
+          style: project.tipStyle,
+          corners: project.tipCorners,
+          progress: project.tipProgress,
+          font: project.tipFont,
+          backdrop: project.tipBackdrop,
+        },
       },
     };
     return json(body, {

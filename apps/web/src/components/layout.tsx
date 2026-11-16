@@ -66,7 +66,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center rounded-2xl border border-dashed border-[#c9cceb] bg-white/70 px-6 py-12 text-center",
+        "flex flex-col items-center rounded-2xl border border-dashed border-border-strong bg-card/70 px-6 py-12 text-center",
         className,
       )}
     >
@@ -80,8 +80,8 @@ export function EmptyState({
 
 const STAT_TONES = {
   indigo: "bg-primary-soft text-primary",
-  amber: "bg-[#fff4e0] text-[#b06a00]",
-  green: "bg-[#e6f6ee] text-[#1d7a4b]",
+  amber: "bg-warning-soft text-warning",
+  green: "bg-success-soft text-success",
   slate: "bg-muted text-muted-foreground",
 } as const;
 
@@ -102,12 +102,7 @@ export function StatCard({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-border bg-white p-5 shadow-[0_1px_2px_rgb(27_31_75/0.05)]",
-        className,
-      )}
-    >
+    <div className={cn("rounded-xl border border-border bg-card p-5 shadow-card", className)}>
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm text-muted-foreground">{label}</p>
         {icon && (

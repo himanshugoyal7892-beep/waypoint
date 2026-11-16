@@ -4,23 +4,44 @@
  * Waypoint theme: wayfinding. Indigo "route" colour on a lavender-tinted ground, a deep
  * ink sidebar, and one amber accent reserved for the "you are here" waypoint pin.
  */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Two surveys of the same terrain. Day: lavender-tinted ground, ink sidebar, indigo route.
+ * Night: deep navy ground with a lighter indigo route so it keeps contrast. Amber stays the
+ * single "you are here" accent in both. Components only use these tokens.
+ */
 @theme {
   --color-background: #ffffff;
-  --color-foreground: #171a3d;
+  --color-foreground: #15183a;
   --color-card: #ffffff;
-  --color-card-foreground: #171a3d;
-  --color-canvas: #f5f6fc;
+  --color-card-foreground: #15183a;
+  --color-canvas: #f4f5fb;
   --color-muted: #eef0f8;
-  --color-muted-foreground: #5d6283;
-  --color-border: #e1e4f2;
+  --color-muted-foreground: #5b6084;
+  --color-border: #e2e5f1;
+  --color-border-strong: #c9cceb;
   --color-primary: #4a44d6;
   --color-primary-foreground: #ffffff;
   --color-primary-soft: #ecebfd;
-  --color-ink: #1b1f4b;
+  --color-ink: #15183f;
   --color-ink-muted: #a9add6;
   --color-pin: #f5a524;
+  --color-pin-foreground: #15183f;
+  --color-success: #1d7a4b;
+  --color-success-solid: #1d9a5b;
+  --color-success-soft: #e4f5ec;
+  --color-warning: #8a5300;
+  --color-warning-soft: #fff6e5;
+  --color-warning-strong: #ffeccc;
+  --color-warning-border: #f1d08f;
   --color-destructive: #c62828;
+  --color-destructive-soft: #fdecec;
+  --color-destructive-foreground: #8f1d1d;
   --color-ring: #4a44d6;
+  --color-chart-track: #e2e5f1;
+  --shadow-card: 0 1px 2px rgb(27 31 75 / 0.05), 0 0 0 0 transparent;
+  --shadow-raised: 0 8px 24px rgb(27 31 75 / 0.08);
   --font-sans:
     "Instrument Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display:
@@ -28,9 +49,46 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+.dark {
+  --color-background: #12142e;
+  --color-foreground: #e8e9f7;
+  --color-card: #171a3a;
+  --color-card-foreground: #e8e9f7;
+  --color-canvas: #0d0f24;
+  --color-muted: #1f2349;
+  --color-muted-foreground: #a3a7cf;
+  --color-border: #2a2f5e;
+  --color-border-strong: #3d4384;
+  --color-primary: #8a85ff;
+  --color-primary-foreground: #0d0f24;
+  --color-primary-soft: #262a66;
+  --color-ink: #090b1c;
+  --color-ink-muted: #8f94c4;
+  --color-pin: #f7b23b;
+  --color-pin-foreground: #0d0f24;
+  --color-success: #5ad69a;
+  --color-success-solid: #26a866;
+  --color-success-soft: #10301f;
+  --color-warning: #ffcf7a;
+  --color-warning-soft: #2e2208;
+  --color-warning-strong: #3d2e0b;
+  --color-warning-border: #6b5017;
+  --color-destructive: #ff6b6b;
+  --color-destructive-soft: #3a1218;
+  --color-destructive-foreground: #ffb4b4;
+  --color-ring: #8a85ff;
+  --color-chart-track: #2a2f5e;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 0 transparent;
+  --shadow-raised: 0 10px 30px rgb(0 0 0 / 0.45);
+  color-scheme: dark;
+}
+
 @layer base {
   html {
     color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
     @apply bg-canvas text-foreground antialiased;
@@ -48,13 +106,16 @@
   :focus-visible {
     outline-color: var(--color-ring);
   }
+  ::selection {
+    background: var(--color-primary-soft);
+  }
 }
 
 /* Topographic contours, fading out down the page: the one decorative element. */
 .contour-ground {
   background-color: var(--color-canvas);
   background-image:
-    linear-gradient(to bottom, rgb(245 246 252 / 0) 0, var(--color-canvas) 520px),
+    linear-gradient(to bottom, transparent 0, var(--color-canvas) 520px),
     radial-gradient(1100px 420px at 75% -80px, rgb(74 68 214 / 0.14), transparent 70%),
     url("/brand/contours.svg");
   background-repeat: no-repeat;
@@ -85,4 +146,31 @@
 
 .skip-link {
   @apply sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:shadow;
+}
+
+/* Night: dim the contours so they read as terrain, not noise. */
+.dark .contour-ground {
+  background-image:
+    linear-gradient(to bottom, transparent 0, var(--color-canvas) 520px),
+    radial-gradient(1100px 420px at 75% -80px, rgb(138 133 255 / 0.16), transparent 70%),
+    linear-gradient(rgb(13 15 36 / 0.82), rgb(13 15 36 / 0.82)), url("/brand/contours.svg");
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    1600px auto;
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    right -240px top -120px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

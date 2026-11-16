@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { Logo, YouAreHere } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 export interface SidebarProject {
@@ -188,7 +189,8 @@ function NavContent({
 
       <div className="flex items-center gap-3 border-t border-white/10 px-6 py-4">
         <UserButton appearance={{ elements: { avatarBox: "size-8" } }} />
-        <span className="truncate text-sm text-ink-muted">{userLabel}</span>
+        <span className="min-w-0 flex-1 truncate text-sm text-ink-muted">{userLabel}</span>
+        <ThemeToggle />
       </div>
     </div>
   );

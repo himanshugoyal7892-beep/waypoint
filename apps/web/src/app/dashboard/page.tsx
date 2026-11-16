@@ -97,7 +97,7 @@ export default async function DashboardHome() {
                     <li key={p.id}>
                       <Link
                         href={`/dashboard/projects/${p.id}`}
-                        className="flex h-full flex-col rounded-xl border border-border bg-white p-4 shadow-[0_1px_2px_rgb(27_31_75/0.05)] hover:border-primary/40 focus-visible:outline-2"
+                        className="flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-card hover:border-primary/40 focus-visible:outline-2"
                       >
                         <div className="flex items-start gap-3">
                           <ProgressRing
@@ -137,7 +137,7 @@ export default async function DashboardHome() {
                           </div>
                         </dl>
                         {p.checklist.next && (
-                          <span className="mt-3 flex items-center gap-1.5 rounded-lg bg-[#fff8eb] px-2.5 py-1.5 text-xs font-medium text-[#8a5300]">
+                          <span className="mt-3 flex items-center gap-1.5 rounded-lg bg-warning-soft px-2.5 py-1.5 text-xs font-medium text-warning">
                             Next: {p.checklist.next.label}
                             <ArrowRight className="ml-auto size-3.5" aria-hidden />
                           </span>

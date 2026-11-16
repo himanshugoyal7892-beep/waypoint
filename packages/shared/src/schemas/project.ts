@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IDENTITY_SOURCES } from "../enums";
+import { IDENTITY_SOURCES, TIP_CORNERS, TIP_FONTS, TIP_PROGRESS, TIP_STYLES } from "../enums";
 import { LIMITS } from "../limits";
 import { explainInvalidOrigin, normalizeOrigin } from "../origins";
 import { requiredPlainText } from "./common";
@@ -94,6 +94,11 @@ export const updateProjectSchema = createProjectSchema
         return n;
       })
       .optional(),
+    tipStyle: z.enum(TIP_STYLES).optional(),
+    tipCorners: z.enum(TIP_CORNERS).optional(),
+    tipProgress: z.enum(TIP_PROGRESS).optional(),
+    tipFont: z.enum(TIP_FONTS).optional(),
+    tipBackdrop: z.boolean().optional(),
     themeColor: z
       .union([z.string(), z.null()])
       .transform((v, ctx) => {

@@ -41,7 +41,7 @@ export default async function ProjectsPage() {
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
             <li key={p.id}>
-              <article className="relative flex h-full flex-col rounded-xl border border-border bg-white p-5 shadow-[0_1px_2px_rgb(27_31_75/0.05)] transition-shadow focus-within:ring-2 focus-within:ring-ring hover:shadow-[0_6px_20px_rgb(27_31_75/0.08)]">
+              <article className="relative flex h-full flex-col rounded-xl border border-border bg-card p-5 shadow-card transition-shadow focus-within:ring-2 focus-within:ring-ring hover:shadow-raised">
                 <div className="flex items-start gap-3">
                   <span
                     className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft font-display text-lg font-semibold text-primary"

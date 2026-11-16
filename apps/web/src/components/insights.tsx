@@ -12,7 +12,7 @@ export function ProgressRing({
   stroke = 9,
   label,
   sublabel,
-  tone = "#4a44d6",
+  tone = "var(--color-primary)",
 }: {
   /** 0–1 */
   value: number;
@@ -36,7 +36,7 @@ export function ProgressRing({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#e1e4f2"
+          stroke="var(--color-chart-track)"
           strokeWidth={stroke}
           strokeDasharray="2 5"
         />
@@ -53,7 +53,14 @@ export function ProgressRing({
           className="motion-safe:transition-[stroke-dasharray] motion-safe:duration-700"
         />
         {v > 0 && v < 1 && (
-          <circle cx={px} cy={py} r={stroke / 2 + 2} fill="#f5a524" stroke="#fff" strokeWidth={2} />
+          <circle
+            cx={px}
+            cy={py}
+            r={stroke / 2 + 2}
+            fill="var(--color-pin)"
+            stroke="var(--color-card)"
+            strokeWidth={2}
+          />
         )}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
@@ -70,13 +77,28 @@ export function ProgressRing({
 
 const GRADE_STYLE: Record<HealthGrade, { chip: string; text: string; ring: string; word: string }> =
   {
-    A: { chip: "bg-[#1d7a4b] text-white", text: "text-[#1d7a4b]", ring: "#1d9a5b", word: "Great" },
-    B: { chip: "bg-primary text-white", text: "text-primary", ring: "#4a44d6", word: "Good" },
-    C: { chip: "bg-pin text-ink", text: "text-[#a35f00]", ring: "#f5a524", word: "Needs work" },
+    A: {
+      chip: "bg-success-solid text-white",
+      text: "text-success",
+      ring: "var(--color-success-solid)",
+      word: "Great",
+    },
+    B: {
+      chip: "bg-primary text-primary-foreground",
+      text: "text-primary",
+      ring: "var(--color-primary)",
+      word: "Good",
+    },
+    C: {
+      chip: "bg-pin text-pin-foreground",
+      text: "text-warning",
+      ring: "var(--color-pin)",
+      word: "Needs work",
+    },
     D: {
-      chip: "bg-[#c62828] text-white",
-      text: "text-[#c62828]",
-      ring: "#c62828",
+      chip: "bg-destructive text-white",
+      text: "text-destructive",
+      ring: "var(--color-destructive)",
       word: "At risk",
     },
   };
@@ -92,8 +114,8 @@ export function HealthBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border bg-white pr-2.5 font-medium tabular-nums",
-        health.provisional ? "border-dashed border-[#c9cceb]" : "border-border",
+        "inline-flex items-center gap-1.5 rounded-full border bg-card pr-2.5 font-medium tabular-nums",
+        health.provisional ? "border-dashed border-border-strong" : "border-border",
         size === "sm" ? "text-xs" : "text-sm",
       )}
       title={`Health ${health.score}/100, grade ${health.grade}${health.provisional ? " (provisional: not enough visits yet)" : ""}`}
@@ -116,10 +138,10 @@ export function HealthBadge({
 
 /** Each bar shows its own standing: full marks green, decent indigo, weak amber, poor red. */
 function partColour(ratio: number) {
-  if (ratio >= 0.85) return "#1d9a5b";
-  if (ratio >= 0.6) return "#4a44d6";
-  if (ratio >= 0.3) return "#f5a524";
-  return "#c62828";
+  if (ratio >= 0.85) return "var(--color-success-solid)";
+  if (ratio >= 0.6) return "var(--color-primary)";
+  if (ratio >= 0.3) return "var(--color-pin)";
+  return "var(--color-destructive)";
 }
 
 export function HealthPanel({
@@ -166,7 +188,7 @@ export function HealthPanel({
               className={cn(
                 "mt-1 h-2 overflow-hidden rounded-full",
                 p.pending
-                  ? "bg-[repeating-linear-gradient(90deg,#e1e4f2_0_6px,transparent_6px_10px)]"
+                  ? "bg-[repeating-linear-gradient(90deg,var(--color-chart-track)_0_6px,transparent_6px_10px)]"
                   : "bg-muted",
               )}
             >
@@ -185,8 +207,8 @@ export function HealthPanel({
         ))}
       </ul>
       {tips.length > 0 && (
-        <div className="rounded-lg bg-[#fff8eb] p-3">
-          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-[#8a5300]">
+        <div className="rounded-lg bg-warning-soft p-3">
+          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-warning">
             <Lightbulb className="size-3.5" aria-hidden /> To raise the score
           </p>
           <ul className="space-y-1.5 text-sm">
@@ -216,7 +238,7 @@ export function ChecklistCard({
   return (
     <section
       aria-labelledby="checklist-title"
-      className="rounded-xl border border-border bg-white p-5 shadow-[0_1px_2px_rgb(27_31_75/0.05)]"
+      className="rounded-xl border border-border bg-card p-5 shadow-card"
     >
       <div className="flex items-center gap-5">
         <ProgressRing value={progress} label={`${done}/${total}`} sublabel="done" />
@@ -229,7 +251,7 @@ export function ChecklistCard({
           {next && (
             <Link
               href={next.href}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-ink px-3.5 py-1.5 text-sm font-medium text-white hover:bg-ink/90 focus-visible:outline-2"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-1.5 text-sm font-medium text-background hover:bg-foreground/90 focus-visible:outline-2"
             >
               Next: {next.label} <ArrowRight className="size-3.5" aria-hidden />
             </Link>
@@ -245,7 +267,7 @@ export function ChecklistCard({
                 href={it.href}
                 className={cn(
                   "-mx-2 flex gap-3 rounded-lg px-2 py-2 hover:bg-muted/60 focus-visible:outline-2",
-                  isNext && "bg-[#fff8eb] hover:bg-[#fff2d9]",
+                  isNext && "bg-warning-soft hover:bg-warning-strong",
                 )}
               >
                 <span
@@ -253,20 +275,20 @@ export function ChecklistCard({
                   className={cn(
                     "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2",
                     it.done
-                      ? "border-primary bg-primary text-white"
+                      ? "border-primary bg-primary text-primary-foreground"
                       : isNext
                         ? "border-pin bg-pin"
-                        : "border-[#c9cceb] bg-white",
+                        : "border-border-strong bg-card",
                   )}
                 >
                   {it.done && <Check className="size-3" strokeWidth={3} />}
-                  {isNext && <span className="size-1.5 rounded-full bg-ink" />}
+                  {isNext && <span className="size-1.5 rounded-full bg-pin-foreground" />}
                 </span>
                 <span className="min-w-0">
                   <span
                     className={cn(
                       "block text-sm font-medium",
-                      it.done && "text-muted-foreground line-through decoration-[#c9cceb]",
+                      it.done && "text-muted-foreground line-through decoration-border-strong",
                     )}
                   >
                     {it.label}

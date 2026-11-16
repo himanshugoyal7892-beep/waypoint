@@ -66,26 +66,33 @@ export function RouteIllustration({
       <path
         d="M14 70 C 50 70, 52 30, 92 30 S 140 72, 176 58"
         fill="none"
-        stroke="#C9CCEB"
+        stroke="var(--color-border-strong)"
         strokeWidth="2.5"
         strokeDasharray="3 6"
         strokeLinecap="round"
       />
-      <circle cx="14" cy="70" r="6" fill="#ECEBFD" stroke="#4A44D6" strokeWidth="2" />
+      <circle
+        cx="14"
+        cy="70"
+        r="6"
+        fill="var(--color-primary-soft)"
+        stroke="var(--color-primary)"
+        strokeWidth="2"
+      />
       <circle
         cx="92"
         cy="30"
         r="5"
-        fill="#ECEBFD"
-        stroke="#4A44D6"
+        fill="var(--color-primary-soft)"
+        stroke="var(--color-primary)"
         strokeOpacity=".5"
         strokeWidth="2"
       />
       {variant === "data" ? (
         <g transform="translate(160 26)">
-          <rect x="0" y="22" width="8" height="14" rx="2" fill="#C9CCEB" />
-          <rect x="12" y="12" width="8" height="24" rx="2" fill="#A9A6F0" />
-          <rect x="24" y="2" width="8" height="34" rx="2" fill="#4A44D6" />
+          <rect x="0" y="22" width="8" height="14" rx="2" fill="var(--color-border-strong)" />
+          <rect x="12" y="12" width="8" height="24" rx="2" fill="var(--color-ink-muted)" />
+          <rect x="24" y="2" width="8" height="34" rx="2" fill="var(--color-primary)" />
         </g>
       ) : (
         <g transform="translate(164 18)">

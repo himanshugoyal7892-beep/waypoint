@@ -50,6 +50,11 @@ export default async function ProjectSettingsPage({
                 identityKey: project.identityKey,
                 maxAutoToursPerVisit: project.maxAutoToursPerVisit,
                 themeColor: project.themeColor,
+                tipStyle: project.tipStyle,
+                tipCorners: project.tipCorners,
+                tipProgress: project.tipProgress,
+                tipFont: project.tipFont,
+                tipBackdrop: project.tipBackdrop,
               }}
             />
           </CardContent>
@@ -78,7 +83,7 @@ export default async function ProjectSettingsPage({
           </Card>
           <section
             aria-labelledby="danger"
-            className="rounded-xl border border-destructive/30 bg-white p-5"
+            className="rounded-xl border border-destructive/30 bg-card p-5"
           >
             <h2 id="danger" className="text-sm font-semibold">
               Danger zone

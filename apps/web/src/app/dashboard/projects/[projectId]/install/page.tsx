@@ -35,7 +35,7 @@ export default async function InstallPage({ params }: { params: Promise<{ projec
         </CardHeader>
         <CardContent className="space-y-3">
           <pre
-            className="overflow-x-auto rounded-md bg-zinc-950 p-4 text-xs leading-relaxed text-zinc-100"
+            className="overflow-x-auto rounded-lg border border-ink/40 bg-ink p-4 text-xs leading-relaxed text-[#e8e9f7] dark:border-border"
             aria-label="Install snippet"
           >
             <code className="bg-transparent p-0 text-inherit">{install.snippet}</code>

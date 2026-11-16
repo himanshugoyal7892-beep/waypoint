@@ -87,7 +87,7 @@ export default async function ToursPage({
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-white shadow-[0_1px_2px_rgb(27_31_75/0.05)]">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-card">
           <table className="w-full text-sm">
             <caption className="sr-only">Tours in this project</caption>
             <thead className="border-b border-border text-left text-xs text-muted-foreground">

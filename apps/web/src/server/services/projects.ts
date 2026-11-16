@@ -15,6 +15,11 @@ export const projectSelect = {
   identityKey: true,
   maxAutoToursPerVisit: true,
   themeColor: true,
+  tipStyle: true,
+  tipCorners: true,
+  tipProgress: true,
+  tipFont: true,
+  tipBackdrop: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.ProjectSelect;

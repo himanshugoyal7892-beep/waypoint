@@ -69,7 +69,7 @@ export function FormError({ message }: { message?: string | null }) {
       ref={ref}
       tabIndex={-1}
       role="alert"
-      className="rounded-md border border-destructive/40 bg-red-50 p-3 text-sm text-red-900 outline-none"
+      className="rounded-md border border-destructive/40 bg-destructive-soft p-3 text-sm text-destructive-foreground outline-none"
     >
       {message}
     </div>

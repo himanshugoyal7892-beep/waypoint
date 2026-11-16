@@ -7,9 +7,9 @@ const badgeVariants = cva("inline-flex items-center rounded-full px-2 py-0.5 tex
   variants: {
     variant: {
       default: "bg-muted text-foreground",
-      success: "bg-emerald-100 text-emerald-800",
-      warning: "bg-amber-100 text-amber-900",
-      muted: "bg-zinc-100 text-zinc-600",
+      success: "bg-success-soft text-success",
+      warning: "bg-warning-soft text-warning",
+      muted: "bg-muted text-muted-foreground",
     },
   },
   defaultVariants: { variant: "default" },
@@ -24,8 +24,14 @@ export function Badge({
 }
 
 const alertStyles = {
-  error: { cls: "border-destructive/40 bg-red-50 text-red-900", Icon: CircleAlert },
-  warning: { cls: "border-amber-300 bg-amber-50 text-amber-950", Icon: AlertTriangle },
+  error: {
+    cls: "border-destructive/40 bg-destructive-soft text-destructive-foreground",
+    Icon: CircleAlert,
+  },
+  warning: {
+    cls: "border-warning-border bg-warning-soft text-foreground [&>svg]:text-warning",
+    Icon: AlertTriangle,
+  },
   info: { cls: "border-border bg-muted/60 text-foreground", Icon: Info },
 } as const;
 

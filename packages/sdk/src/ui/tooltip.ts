@@ -1,4 +1,6 @@
 import type { PublicTourStep } from "@waypoint/shared/api-types";
+import type { PublicTipTheme } from "@waypoint/shared/api-types";
+import { DEFAULT_TIP, tipThemeVars } from "./theme";
 import {
   arrow,
   autoPlacement,
@@ -57,15 +59,30 @@ export class TourUI {
   /** Destroys every live tooltip (used by tests and full teardown). */
   private static themeColor: string | null = null;
 
-  /** Brand colour for buttons and highlight (from the project's settings). */
-  static setTheme(color: string | null) {
+  private static tip: PublicTipTheme = DEFAULT_TIP;
+
+  /** Brand colour and tip theme (from the project's settings). */
+  static setTheme(color: string | null, tip?: PublicTipTheme | null) {
     TourUI.themeColor = color && /^#[0-9a-fA-F]{6}$/.test(color) ? color : null;
+    if (tip) TourUI.tip = tip;
     for (const ui of TourUI.live) ui.applyTheme();
   }
 
+  private appliedVars: string[] = [];
+
   private applyTheme() {
-    if (TourUI.themeColor) this.host.style.setProperty("--wp-primary", TourUI.themeColor);
-    else this.host.style.removeProperty("--wp-primary");
+    for (const k of this.appliedVars) this.host.style.removeProperty(k);
+    let siteFont: string | undefined;
+    if (TourUI.tip.font === "SITE") {
+      try {
+        siteFont = getComputedStyle(document.body).fontFamily || undefined;
+      } catch {
+        /* no body yet */
+      }
+    }
+    const vars = tipThemeVars(TourUI.tip, TourUI.themeColor, siteFont);
+    for (const [k, v] of Object.entries(vars)) this.host.style.setProperty(k, v);
+    this.appliedVars = Object.keys(vars);
   }
 
   static destroyAll() {
@@ -136,8 +153,29 @@ export class TourUI {
     }
 
     const footer = el("div", "footer");
-    const counter = el("span", "counter", `${index + 1} of ${total}`);
+    const counter = el("span", "counter");
     counter.setAttribute("aria-live", "polite");
+    const countText = el("span", "", `${index + 1} of ${total}`);
+    const progress = TourUI.tip.progress;
+    if (progress === "DOTS" && total <= 12) {
+      const dots = el("span", "counter");
+      dots.setAttribute("aria-hidden", "true");
+      for (let i = 0; i < total; i++)
+        dots.append(el("span", i === index ? "dot on" : i < index ? "dot done" : "dot"));
+      countText.className = "sr";
+      counter.append(dots, countText);
+    } else if (progress === "BAR") {
+      const bar = el("span", "bar");
+      bar.setAttribute("aria-hidden", "true");
+      const fill = el("i");
+      fill.style.width = `${Math.round(((index + 1) / total) * 100)}%`;
+      bar.append(fill);
+      countText.className = "sr";
+      counter.append(bar, countText);
+    } else {
+      if (progress === "NONE") countText.className = "sr";
+      counter.append(countText);
+    }
     footer.append(counter);
     if (step.allowSkip && !isLast)
       footer.append(this.button("Skip", "btn link", () => this.actions.onSkip()));

@@ -5,6 +5,10 @@ import type {
   Frequency,
   IdentitySource,
   Placement,
+  TipCorners,
+  TipFont,
+  TipProgress,
+  TipStyle,
   TriggerType,
 } from "./enums";
 import type { PublishIssue } from "./publish-rules";
@@ -65,9 +69,18 @@ export interface PublicTour {
 }
 
 /** Project-wide settings the SDK needs. */
+export interface PublicTipTheme {
+  style: TipStyle;
+  corners: TipCorners;
+  progress: TipProgress;
+  font: TipFont;
+  backdrop: boolean;
+}
+
 export interface PublicSettings {
   maxAutoToursPerVisit: number | null;
   themeColor: string | null;
+  tip?: PublicTipTheme;
 }
 
 /** Where the SDK reads the logged-in user's id, if the project configured it. */

@@ -83,7 +83,7 @@ export function boot(): void {
       const res = await fetchTours(config.apiBase, config.projectKey, path, fresh);
       visits.setIdentityConfig(res.identity);
       maxAuto = res.settings?.maxAutoToursPerVisit ?? null;
-      TourUI.setTheme(res.settings?.themeColor ?? null);
+      TourUI.setTheme(res.settings?.themeColor ?? null, res.settings?.tip ?? null);
       return res.tours;
     },
     maxAutoToursPerVisit: () => maxAuto,

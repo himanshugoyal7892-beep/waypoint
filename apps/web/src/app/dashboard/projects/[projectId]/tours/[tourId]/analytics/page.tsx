@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Tour analytics" };
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
-const BAR_TONES = { indigo: "bg-primary", green: "bg-[#1d9a5b]", amber: "bg-pin" } as const;
+const BAR_TONES = { indigo: "bg-primary", green: "bg-success-solid", amber: "bg-pin" } as const;
 
 function Bar({
   value,
@@ -192,7 +192,7 @@ export default async function TourAnalyticsPage({
                         <td
                           className={cn(
                             "py-2.5 pr-3 text-right tabular-nums",
-                            s.dropOffFromPrevious > 0 && "text-amber-700",
+                            s.dropOffFromPrevious > 0 && "text-warning",
                           )}
                         >
                           {s.stepOrder === 1 ? "—" : s.dropOffFromPrevious}
