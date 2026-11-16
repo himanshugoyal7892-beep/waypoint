@@ -108,7 +108,10 @@ export default async function InstallPage({ params }: { params: Promise<{ projec
           ) : (
             <Alert tone="warning">No allowed origins yet.</Alert>
           )}
-          <Link href={base} className="mt-3 inline-block text-sm text-primary hover:underline">
+          <Link
+            href={`${base}/settings#allowedOrigins`}
+            className="mt-3 inline-block text-sm text-primary hover:underline"
+          >
             Edit allowed origins
           </Link>
         </CardContent>

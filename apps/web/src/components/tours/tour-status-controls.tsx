@@ -16,7 +16,7 @@ type Action = "publish" | "unpublish" | "archive" | "restore";
 /** Links an issue to the place where it can be fixed. */
 function issueHref(issue: PublishIssue, base: string, projectHref: string): string | null {
   if (issue.stepId) return `${base}/steps/${issue.stepId}`;
-  if (issue.code === "NO_ALLOWED_ORIGIN") return projectHref;
+  if (issue.code === "NO_ALLOWED_ORIGIN") return `${projectHref}/settings#allowedOrigins`;
   if (issue.code === "NO_STEPS") return `${base}/steps/new`;
   return null;
 }

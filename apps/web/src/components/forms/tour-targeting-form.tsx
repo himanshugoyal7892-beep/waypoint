@@ -163,7 +163,7 @@ export function TourTargetingForm({
         {v.loginState !== "ANY" && !identityConfigured && (
           <Alert tone="warning">
             Waypoint can only tell who is logged in once{" "}
-            <a className="underline" href={`${projectHref}#identity`}>
+            <a className="underline" href={`${projectHref}/settings#identity`}>
               Recognise logged-in users
             </a>{" "}
             is set up for this project.
@@ -231,7 +231,7 @@ export function TourTargetingForm({
             ) : (
               <>
                 Without user recognition, each browser counts as a separate visitor.{" "}
-                <a className="text-primary underline" href={`${projectHref}#identity`}>
+                <a className="text-primary underline" href={`${projectHref}/settings#identity`}>
                   Set up “Recognise logged-in users”
                 </a>{" "}
                 for accurate results.

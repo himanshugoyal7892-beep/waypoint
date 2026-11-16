@@ -8,6 +8,8 @@ import { loadOr404 } from "@/lib/page-data";
 import { cn, formatDate } from "@/lib/utils";
 import { requirePageUser } from "@/server/auth";
 import { listTours } from "@/server/services/tours";
+import { HealthBadge } from "@/components/insights";
+import { getProjectInsights } from "@/server/insights/service";
 
 export const metadata: Metadata = { title: "Tours" };
 
@@ -28,7 +30,10 @@ export default async function ToursPage({
   const [{ projectId }, sp] = await Promise.all([params, searchParams]);
   const status = TOUR_STATUSES.find((s) => s === sp.status);
   const user = await requirePageUser();
-  const tours = await loadOr404(() => listTours(user.id, projectId, status));
+  const [tours, insights] = await loadOr404(() =>
+    Promise.all([listTours(user.id, projectId, status), getProjectInsights(user.id, projectId)]),
+  );
+  const healthOf = new Map(insights.tours.map((t) => [t.id, t.health]));
   const base = `/dashboard/projects/${projectId}`;
 
   return (
@@ -91,6 +96,9 @@ export default async function ToursPage({
                   Name
                 </th>
                 <th scope="col" className="px-4 py-2 font-medium">
+                  Health
+                </th>
+                <th scope="col" className="px-4 py-2 font-medium">
                   Status
                 </th>
                 <th scope="col" className="px-4 py-2 font-medium">
@@ -114,6 +122,13 @@ export default async function ToursPage({
                     <Link href={`${base}/tours/${t.id}`} className="font-medium hover:underline">
                       {t.name}
                     </Link>
+                  </td>
+                  <td className="px-4 py-2.5">
+                    {healthOf.get(t.id) ? (
+                      <HealthBadge health={healthOf.get(t.id)!} size="sm" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-2.5">
                     <TourStatusBadge status={t.status} />

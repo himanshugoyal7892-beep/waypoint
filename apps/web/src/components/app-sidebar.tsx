@@ -132,16 +132,6 @@ function NavContent({
                       </li>
                       <li>
                         <NavLink
-                          href={`${base}/install`}
-                          active={pathname.startsWith(`${base}/install`)}
-                          depth={1}
-                          onNavigate={onNavigate}
-                        >
-                          Install
-                        </NavLink>
-                      </li>
-                      <li>
-                        <NavLink
                           href={`${base}/tours`}
                           active={pathname.startsWith(`${base}/tours`)}
                           depth={1}
@@ -158,6 +148,26 @@ function NavContent({
                           onNavigate={onNavigate}
                         >
                           Analytics
+                        </NavLink>
+                      </li>
+                      <li>
+                        <NavLink
+                          href={`${base}/install`}
+                          active={pathname.startsWith(`${base}/install`)}
+                          depth={1}
+                          onNavigate={onNavigate}
+                        >
+                          Install
+                        </NavLink>
+                      </li>
+                      <li>
+                        <NavLink
+                          href={`${base}/settings`}
+                          active={pathname.startsWith(`${base}/settings`)}
+                          depth={1}
+                          onNavigate={onNavigate}
+                        >
+                          Settings
                         </NavLink>
                       </li>
                     </ul>

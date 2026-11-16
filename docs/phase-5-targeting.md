@@ -112,3 +112,26 @@ Verified locally: `verify.sh` green (shared 70, web 41, sdk 69 tests). Targeting
 - **UAT quirks:**
   - The CookieYes banner appears bottom-left for new visitors.
   - Below 1024 px the site switches to a mobile header, so the desktop header steps don't apply there.
+
+## Dashboard reorganisation and gamification (16 Nov 2026)
+
+- **Project sections:** the project sidebar is now Overview · Tours · Analytics · Install · **Settings**. Settings is a new page holding the project form and the danger zone, with jump links to Allowed websites, Recognise logged-in users and Tour display.
+- **Home:** totals across all projects (visits in the last 7 days, tours completed with the share of starts, live tours). Each project card shows its launch-checklist ring, level, visits, live tours, average health and the next step. A **Needs attention** list shows the live tours with the lowest health, each with its top tip.
+- **Project overview:** the **launch checklist** has 8 stops drawn as a route with a progress ring and level, plus a "Next: …" button. Levels are Getting started → Taking shape → Almost there → Launch ready. Beside it are 7-day figures. Below, **Tour health** lists tours lowest score first, each with its top tip.
+- **Tour page:** tabs for **Steps** (steps and visual builder), **Who & when** (targeting) and **Details & link**. A side column always shows Status and **Tour health** (score ring, grade, 5 part bars, tips). The health badge is in the header.
+- **Tours list:** new Health column.
+- **Health score** (`server/insights/health.ts`, last 30 days):
+  - Parts: completion 35, reliability 25, length 15, copy 15, setup 10.
+  - Completion and reliability need at least 5 starts or step loads. Until then the score is **provisional** (dashed badge with `*`) and scaled over the parts that can be judged.
+  - Grades: A ≥ 85, B ≥ 70, C ≥ 55, D below 55.
+  - Tips name the step where most people leave and the step whose element went missing.
+- **Checklist** (`server/insights/checklist.ts`), 8 stops:
+  1. Add a real website (not localhost)
+  2. Install the snippet (first visit seen)
+  3. Build a tour with 3+ steps
+  4. Publish
+  5. Recognise logged-in users
+  6. Aim a tour (any targeting, priority or date)
+  7. Brand colour
+  8. First completion
+- **Verified:** `verify.sh` green (web tests 50, including 9 for insights). All screens rendered locally with real data and reviewed, with auth bypassed temporarily and then restored.
