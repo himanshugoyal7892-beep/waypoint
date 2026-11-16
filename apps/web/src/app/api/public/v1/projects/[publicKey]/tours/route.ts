@@ -31,11 +31,15 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     const body: PublicToursResponse = {
       tours: await getEligibleTours(project.id, path),
       identity: publicIdentity(project),
+      settings: {
+        maxAutoToursPerVisit: project.maxAutoToursPerVisit,
+        themeColor: project.themeColor,
+      },
     };
     return json(body, {
       headers: {
         ...cors,
-        "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
+        "Cache-Control": "public, max-age=0, s-maxage=20, stale-while-revalidate=40",
       },
     });
   } catch (err) {

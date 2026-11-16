@@ -38,5 +38,14 @@ export type Audience = (typeof AUDIENCES)[number];
 export const FREQUENCIES = ["ONCE", "UNTIL_COMPLETED", "INTERVAL"] as const;
 export type Frequency = (typeof FREQUENCIES)[number];
 
+export const LOGIN_STATES = ["ANY", "LOGGED_IN", "LOGGED_OUT"] as const;
+export type LoginState = (typeof LOGIN_STATES)[number];
+
+export const DEVICE_TARGETS = ["ANY", "DESKTOP", "MOBILE"] as const;
+export type DeviceTarget = (typeof DEVICE_TARGETS)[number];
+
+/** Viewport width at which a page counts as desktop (most sites switch header layout here). */
+export const DESKTOP_MIN_WIDTH = 1024;
+
 export const IDENTITY_SOURCES = ["NONE", "WINDOW", "DATALAYER", "COOKIE"] as const;
 export type IdentitySource = (typeof IDENTITY_SOURCES)[number];

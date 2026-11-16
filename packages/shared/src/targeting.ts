@@ -1,11 +1,16 @@
-import type { Audience, Frequency } from "./enums";
+import type { Audience, Frequency, LoginState } from "./enums";
 
 /**
  * Pure targeting rules: who sees an automatic tour, and how often. Used by the server to decide
  * eligibility per visit, and by the dashboard to validate the form. No I/O here.
  */
 
-export const TARGETING_LIMITS = { days: 365, maxShows: 20 } as const;
+export const TARGETING_LIMITS = {
+  days: 365,
+  maxShows: 20,
+  priority: 100,
+  waitSeconds: 30,
+} as const;
 export const DEFAULT_MAX_SHOWS = 3;
 
 /** A new visit starts after this much inactivity (matches the SDK's session rotation). */
@@ -21,6 +26,14 @@ export interface TourRules {
   intervalDays: number | null;
   startsAt: Date | null;
   endsAt: Date | null;
+  /** Optional for older callers; treated as ANY. */
+  loginState?: LoginState;
+}
+
+/** Facts about this request that are not stored on the visitor. */
+export interface VisitContext {
+  /** The site told us who is logged in (no-code setting or identify()). */
+  loggedIn: boolean;
 }
 
 export interface VisitorFacts {
@@ -111,14 +124,22 @@ export function allowedByFrequency(
   }
 }
 
+export function matchesLoginState(rules: Pick<TourRules, "loginState">, ctx: VisitContext) {
+  if (rules.loginState === "LOGGED_IN") return ctx.loggedIn;
+  if (rules.loginState === "LOGGED_OUT") return !ctx.loggedIn;
+  return true;
+}
+
 /** Should this automatic tour be offered to this visitor in this visit? */
 export function isTourEligible(
   rules: TourRules,
   visitor: VisitorFacts,
   history: TourHistory | null,
   now: Date,
+  ctx: VisitContext = { loggedIn: false },
 ): boolean {
   return (
+    matchesLoginState(rules, ctx) &&
     inDateWindow(rules, now) &&
     matchesAudience(rules, visitor, now) &&
     allowedByFrequency(rules, history, visitor, now)

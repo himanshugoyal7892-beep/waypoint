@@ -198,3 +198,28 @@ describe("identity and visit schemas", () => {
     ).toBe(false);
   });
 });
+
+describe("login state and new fields", () => {
+  it("logged-in / logged-out tours follow whether the site identified the user", () => {
+    const inOnly = rules({ loginState: "LOGGED_IN" });
+    const outOnly = rules({ loginState: "LOGGED_OUT" });
+    expect(isTourEligible(inOnly, visitor(), null, NOW, { loggedIn: true })).toBe(true);
+    expect(isTourEligible(inOnly, visitor(), null, NOW, { loggedIn: false })).toBe(false);
+    expect(isTourEligible(outOnly, visitor(), null, NOW, { loggedIn: false })).toBe(true);
+    expect(isTourEligible(outOnly, visitor(), null, NOW, { loggedIn: true })).toBe(false);
+    expect(isTourEligible(rules(), visitor(), null, NOW, { loggedIn: true })).toBe(true);
+  });
+  it("validates device, priority and wait time", () => {
+    expect(
+      updateTourSchema.parse({ device: "DESKTOP", priority: "10", waitSeconds: "12" }),
+    ).toEqual({
+      device: "DESKTOP",
+      priority: 10,
+      waitSeconds: 12,
+    });
+    expect(updateTourSchema.safeParse({ waitSeconds: 0 }).success).toBe(false);
+    expect(updateTourSchema.safeParse({ waitSeconds: 31 }).success).toBe(false);
+    expect(updateTourSchema.safeParse({ priority: -1 }).success).toBe(false);
+    expect(updateTourSchema.safeParse({ device: "TV" }).success).toBe(false);
+  });
+});

@@ -154,6 +154,10 @@ export default async function TourPage({
                   intervalDays: tour.intervalDays?.toString() ?? "",
                   startsAt: day(tour.startsAt),
                   endsAt: day(tour.endsAt),
+                  loginState: tour.loginState,
+                  device: tour.device,
+                  priority: String(tour.priority),
+                  waitSeconds: String(tour.waitSeconds),
                 }}
               />
             </CardContent>

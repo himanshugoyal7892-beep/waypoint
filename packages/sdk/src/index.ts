@@ -7,6 +7,7 @@ import { TourEngine } from "./runtime/engine";
 import { safeStore } from "./storage";
 import { watchUrl } from "./url/watch";
 import { navigateTo } from "./navigate";
+import { TourUI } from "./ui/tooltip";
 import { VisitClient } from "./visits";
 
 export const VERSION = "0.5.0";
@@ -66,6 +67,7 @@ export function boot(): void {
 
   const local = safeStore("local");
   const session = safeStore("session");
+  let maxAuto: number | null = null;
   const visits = new VisitClient(config.apiBase, config.projectKey, local, session);
   const analytics = new EventQueue(
     `${config.apiBase}/api/public/v1/events`,
@@ -77,11 +79,14 @@ export function boot(): void {
     }),
   );
   const engine = new TourEngine({
-    loadTours: async (path) => {
-      const res = await fetchTours(config.apiBase, config.projectKey, path);
+    loadTours: async (path, fresh) => {
+      const res = await fetchTours(config.apiBase, config.projectKey, path, fresh);
       visits.setIdentityConfig(res.identity);
+      maxAuto = res.settings?.maxAutoToursPerVisit ?? null;
+      TourUI.setTheme(res.settings?.themeColor ?? null);
       return res.tours;
     },
+    maxAutoToursPerVisit: () => maxAuto,
     ...(window.ProductTourConfig?.preview === true
       ? {}
       : { eligibleTours: () => visits.eligible() }),

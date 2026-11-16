@@ -30,7 +30,7 @@ const setTour = (fields) =>
   sql(`UPDATE "Tour" SET ${fields}, status='PUBLISHED', "triggerType"='AUTO' WHERE id='${TOUR}'`);
 const resetRules = () =>
   setTour(
-    `audience='ALL', "audienceDays"=NULL, "audienceBefore"=NULL, frequency='ONCE', "maxShows"=NULL, "intervalDays"=NULL, "startsAt"=NULL, "endsAt"=NULL`,
+    `audience='ALL', "audienceDays"=NULL, "audienceBefore"=NULL, frequency='ONCE', "maxShows"=NULL, "intervalDays"=NULL, "startsAt"=NULL, "endsAt"=NULL, "loginState"='ANY', device='ANY', priority=0`,
   );
 /** Pretends the visitor's last activity was hours ago, so the next request is a new visit. */
 const endVisits = () =>
@@ -161,7 +161,44 @@ try {
   check("tour inside its date window is shown", await tipShown(d.p));
   await d.ctx.close();
 
-  // 7. Privacy: raw ids never reach the database.
+  // 7. Logged-in only / logged-out only.
+  resetRules();
+  setTour(`"loginState"='LOGGED_IN'`);
+  sql(`DELETE FROM "TourVisitorState"`);
+  d = await device(null);
+  check("logged-in-only tour hidden from a logged-out visitor", !(await tipShown(d.p, 4000)));
+  await d.ctx.close();
+  d = await device("C5005");
+  check("logged-in-only tour shown to a logged-in user", await tipShown(d.p));
+  await d.ctx.close();
+  setTour(`"loginState"='LOGGED_OUT'`);
+  d = await device("C5006");
+  check("logged-out-only tour hidden from a logged-in user", !(await tipShown(d.p, 4000)));
+  await d.ctx.close();
+
+  // 8. Brand colour reaches the tooltip; per-visit limit stops a second automatic tour.
+  resetRules();
+  sql(
+    `UPDATE "Project" SET "themeColor"='#1A7F37', "maxAutoToursPerVisit"=1 WHERE "publicKey"='${KEY}'`,
+  );
+  await new Promise((r) => setTimeout(r, 1200));
+  d = await device("C6006", "/?fresh=1");
+  await tipShown(d.p);
+  const colour = await d.p.evaluate(
+    () =>
+      getComputedStyle(
+        document.querySelector("[data-ptour-host]").shadowRoot.querySelector(".btn.primary"),
+      ).backgroundColor,
+  );
+  check("brand colour applied to the Next button", colour === "rgb(26, 127, 55)", colour);
+  const count = await d.p.evaluate(() => sessionStorage.getItem("ptour:autoCount"));
+  check("automatic start counted towards the per-visit limit", count === "1", count);
+  await d.ctx.close();
+  sql(
+    `UPDATE "Project" SET "themeColor"=NULL, "maxAutoToursPerVisit"=NULL WHERE "publicKey"='${KEY}'`,
+  );
+
+  // 9. Privacy: raw ids never reach the database.
   const leaked = sql(
     `SELECT count(*) FROM "VisitorProfile" WHERE "visitorKey" LIKE '%C1001%' OR "visitorKey" !~ '^[a-f0-9]{64}$'`,
   );

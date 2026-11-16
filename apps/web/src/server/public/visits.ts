@@ -68,6 +68,7 @@ export async function recordVisit(
       intervalDays: true,
       startsAt: true,
       endsAt: true,
+      loginState: true,
     },
   });
   if (!tours.length) return { visitorKey, eligibleTourIds: [] };
@@ -79,7 +80,9 @@ export async function recordVisit(
   return {
     visitorKey,
     eligibleTourIds: tours
-      .filter((t) => isTourEligible(t, facts, byTour.get(t.id) ?? null, now))
+      .filter((t) =>
+        isTourEligible(t, facts, byTour.get(t.id) ?? null, now, { loggedIn: !!input.userId }),
+      )
       .map((t) => t.id),
   };
 }

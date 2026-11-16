@@ -35,6 +35,18 @@ enum Frequency {
   INTERVAL
 }
 
+enum LoginState {
+  ANY
+  LOGGED_IN
+  LOGGED_OUT
+}
+
+enum DeviceTarget {
+  ANY
+  DESKTOP
+  MOBILE
+}
+
 enum IdentitySource {
   NONE
   WINDOW
@@ -89,6 +101,10 @@ model Project {
   identityKey    String?        @db.VarChar(100)
   /// Per-project salt for hashing user and visitor ids. Raw user ids are never stored.
   identitySalt   String         @default(dbgenerated("replace((gen_random_uuid())::text, '-'::text, ''::text)")) @db.VarChar(64)
+  /// At most this many automatic tours per visitor per visit (null = no limit).
+  maxAutoToursPerVisit Int?
+  /// Brand colour for tour buttons and highlight, "#RRGGBB" (null = Waypoint default).
+  themeColor           String? @db.VarChar(7)
   createdById    String
   createdBy      User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
   createdAt      DateTime @default(now())
@@ -122,6 +138,12 @@ model Tour {
   intervalDays   Int?
   startsAt       DateTime? @db.Date
   endsAt         DateTime? @db.Date
+  loginState     LoginState   @default(ANY)
+  device         DeviceTarget @default(ANY)
+  /// Higher wins when several automatic tours could start on the same page.
+  priority       Int          @default(0)
+  /// How long to wait for each step's element to appear (slow pages, late menus).
+  waitSeconds    Int          @default(5)
   version     Int         @default(1)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt

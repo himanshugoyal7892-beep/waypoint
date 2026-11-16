@@ -60,6 +60,10 @@ describe("tour schemas", () => {
         intervalDays: null,
         startsAt: null,
         endsAt: null,
+        loginState: "ANY",
+        device: "ANY",
+        priority: 0,
+        waitSeconds: 5,
       },
     );
   });
@@ -137,5 +141,23 @@ describe("builder pass schemas", () => {
   it("validates pass format", () => {
     expect(redeemBuilderPassSchema.safeParse({ pass: `wpb_${"A".repeat(43)}` }).success).toBe(true);
     expect(redeemBuilderPassSchema.safeParse({ pass: "wpb_short" }).success).toBe(false);
+  });
+});
+
+describe("project display settings", () => {
+  it("accepts a brand colour and per-visit limit, normalises and clears them", async () => {
+    const { updateProjectSchema } = await import("../src/schemas/project");
+    expect(
+      updateProjectSchema.parse({ themeColor: "#1a7f37", maxAutoToursPerVisit: "1" }),
+    ).toMatchObject({
+      themeColor: "#1A7F37",
+      maxAutoToursPerVisit: 1,
+    });
+    expect(updateProjectSchema.parse({ themeColor: "", maxAutoToursPerVisit: "" })).toMatchObject({
+      themeColor: null,
+      maxAutoToursPerVisit: null,
+    });
+    expect(updateProjectSchema.safeParse({ themeColor: "red" }).success).toBe(false);
+    expect(updateProjectSchema.safeParse({ maxAutoToursPerVisit: 11 }).success).toBe(false);
   });
 });

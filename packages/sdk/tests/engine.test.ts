@@ -489,3 +489,56 @@ describe("targeting (server-decided eligibility)", () => {
     expect(host()).toBeNull();
   });
 });
+
+describe("tour controls", () => {
+  it("respects the per-visit limit for automatic tours", async () => {
+    addTargets("t1", "t2", "t3");
+    sessionStorage.setItem("ptour:autoCount", "1");
+    const { engine } = setup([tour()], { maxAutoToursPerVisit: () => 1 });
+    await engine.evaluate();
+    await tick();
+    expect(host()).toBeNull();
+  });
+
+  it("counts automatic starts towards the limit", async () => {
+    addTargets("t1", "t2", "t3");
+    const { engine } = setup([tour()], { maxAutoToursPerVisit: () => 2 });
+    await engine.evaluate();
+    await tick();
+    expect(sessionStorage.getItem("ptour:autoCount")).toBe("1");
+  });
+
+  it("skips desktop-only tours on narrow screens and mobile-only on wide ones", async () => {
+    addTargets("t1", "t2", "t3");
+    const mm = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: false, media: q })) as typeof window.matchMedia;
+    try {
+      const { engine } = setup([
+        tour({ id: "d", device: "DESKTOP" }),
+        tour({ id: "m", device: "MOBILE" }),
+      ]);
+      await engine.evaluate();
+      await tick();
+      expect(sessionStorage.getItem("ptour:shown:m")).toBe("1");
+      expect(sessionStorage.getItem("ptour:shown:d")).toBeNull();
+    } finally {
+      window.matchMedia = mm;
+    }
+  });
+
+  it("reloads without cache when a linked tour isn't in the cached list yet", async () => {
+    addTargets("t1", "t2", "t3");
+    const fresh = tour({ id: "brand-new", triggerType: "MANUAL" });
+    const calls: boolean[] = [];
+    const { engine } = setup([], {
+      loadTours: async (_p: string, f?: boolean) => {
+        calls.push(!!f);
+        return f ? [fresh] : [];
+      },
+    });
+    expect(await engine.start("brand-new")).toBe(true);
+    await tick();
+    expect(calls).toContain(true);
+    expect(q(".title")?.textContent).toBe("Title 1");
+  });
+});

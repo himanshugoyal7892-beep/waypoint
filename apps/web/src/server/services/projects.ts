@@ -13,6 +13,8 @@ export const projectSelect = {
   publicKey: true,
   identitySource: true,
   identityKey: true,
+  maxAutoToursPerVisit: true,
+  themeColor: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.ProjectSelect;

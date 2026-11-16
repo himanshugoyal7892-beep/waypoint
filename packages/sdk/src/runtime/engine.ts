@@ -1,4 +1,5 @@
 import type { PublicTour } from "@waypoint/shared/api-types";
+import { DESKTOP_MIN_WIDTH } from "@waypoint/shared/enums";
 import { matchPathPattern, normalizePathname } from "@waypoint/shared/url";
 import type { EventQueue, TrackInput } from "../analytics/queue";
 import { readJson, type KeyValueStore } from "../storage";
@@ -6,7 +7,10 @@ import { TourUI } from "../ui/tooltip";
 import { findElement, isInViewport, type FindResult } from "./find-element";
 
 export interface EngineDeps {
-  loadTours(path: string): Promise<PublicTour[]>;
+  /** `fresh` skips any cached copy (used when a linked tour was published moments ago). */
+  loadTours(path: string, fresh?: boolean): Promise<PublicTour[]>;
+  /** At most this many automatic tours per visit (null/undefined = no limit). */
+  maxAutoToursPerVisit?(): number | null;
   /**
    * Automatic tours the server says this visitor may see in this visit (audience, timing and
    * date rules). Null means "unknown" (old server, offline): fall back to once per browser.
@@ -95,10 +99,13 @@ export class TourEngine {
           t.triggerType === "AUTO" &&
           t.steps.length > 0 &&
           !this.deps.session.get(`shown:${t.id}`) &&
+          deviceMatches(t.device) &&
           matchPathPattern(t.startUrl, currentPath()) &&
           onThisPage(t.steps[0]!.pageUrl),
       );
       if (!candidates.length) return;
+      const limit = this.deps.maxAutoToursPerVisit?.() ?? null;
+      if (limit !== null && Number(this.deps.session.get("autoCount") ?? 0) >= limit) return;
       const allowed = this.deps.eligibleTours ? await this.deps.eligibleTours() : null;
       if (gen !== this.generation || this.active) return;
       const eligible = candidates.find((t) =>
@@ -108,7 +115,13 @@ export class TourEngine {
             !(t.frequency === "ONCE" && this.deps.local.get(`seen:${t.id}`))
           : !this.deps.local.get(`seen:${t.id}`),
       );
-      if (eligible) this.begin(eligible, 0, true);
+      if (eligible) {
+        this.deps.session.set(
+          "autoCount",
+          String(Number(this.deps.session.get("autoCount") ?? 0) + 1),
+        );
+        this.begin(eligible, 0, true);
+      }
     } catch (err) {
       this.deps.log?.(`evaluate failed: ${String(err)}`);
     }
@@ -121,7 +134,12 @@ export class TourEngine {
         this.tours = await this.deps.loadTours(currentPath());
         this.toursPath = currentPath();
       }
-      const tour = this.tours.find((t) => t.id === tourId);
+      let tour = this.tours.find((t) => t.id === tourId);
+      if (!tour) {
+        this.tours = await this.deps.loadTours(currentPath(), true);
+        this.toursPath = currentPath();
+        tour = this.tours.find((t) => t.id === tourId);
+      }
       if (!tour || !tour.steps.length) {
         this.deps.log?.(`tour ${tourId} is not available on this page`);
         return false;
@@ -154,6 +172,7 @@ export class TourEngine {
       this.deps.session.remove(`shown:${t.id}`);
     }
     this.deps.session.remove("active");
+    this.deps.session.remove("autoCount");
   }
 
   get isActive() {
@@ -208,7 +227,7 @@ export class TourEngine {
 
     const found: FindResult = await findElement(step.cssSelector, {
       signal,
-      timeoutMs: this.deps.findTimeoutMs ?? 5000,
+      timeoutMs: a.tour.waitMs ?? this.deps.findTimeoutMs ?? 5000,
     });
     if (signal.aborted || this.active !== a) return;
     if (!found.element) {
@@ -315,4 +334,13 @@ export class TourEngine {
     this.deps.log?.(`tour error: ${String(err)}`);
     this.end();
   }
+}
+
+/** Desktop/mobile targeting, by viewport width (matches how most sites switch layout). */
+export function deviceMatches(device: PublicTour["device"]): boolean {
+  if (!device || device === "ANY") return true;
+  const desktop =
+    window.matchMedia?.(`(min-width: ${DESKTOP_MIN_WIDTH}px)`).matches ??
+    window.innerWidth >= DESKTOP_MIN_WIDTH;
+  return device === "DESKTOP" ? desktop : !desktop;
 }

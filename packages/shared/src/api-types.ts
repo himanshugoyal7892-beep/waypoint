@@ -1,5 +1,6 @@
 import type {
   BuilderMode,
+  DeviceTarget,
   EventName,
   Frequency,
   IdentitySource,
@@ -56,7 +57,17 @@ export interface PublicTour {
   triggerType: TriggerType;
   frequency: Frequency;
   startUrl: string;
+  /** Desktop/mobile targeting, checked in the browser (width ≥ DESKTOP_MIN_WIDTH = desktop). */
+  device?: DeviceTarget;
+  /** How long to wait for each step's element. */
+  waitMs?: number;
   steps: PublicTourStep[];
+}
+
+/** Project-wide settings the SDK needs. */
+export interface PublicSettings {
+  maxAutoToursPerVisit: number | null;
+  themeColor: string | null;
 }
 
 /** Where the SDK reads the logged-in user's id, if the project configured it. */
@@ -68,6 +79,7 @@ export interface PublicIdentityConfig {
 export interface PublicToursResponse {
   tours: PublicTour[];
   identity: PublicIdentityConfig | null;
+  settings?: PublicSettings;
 }
 
 export interface VisitResponse {

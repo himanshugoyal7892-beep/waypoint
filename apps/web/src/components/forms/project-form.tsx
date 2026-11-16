@@ -20,6 +20,8 @@ interface Values {
   allowedOrigins: string;
   identitySource: IdentitySource;
   identityKey: string;
+  maxAutoToursPerVisit: string;
+  themeColor: string;
 }
 
 const IDENTITY_HELP: Record<IdentitySource, React.ReactNode> = {
@@ -57,6 +59,8 @@ export function ProjectForm({
     allowedOrigins: string[];
     identitySource?: IdentitySource;
     identityKey?: string | null;
+    maxAutoToursPerVisit?: number | null;
+    themeColor?: string | null;
   };
 }) {
   const router = useRouter();
@@ -66,6 +70,8 @@ export function ProjectForm({
     allowedOrigins: initial.allowedOrigins.join("\n"),
     identitySource: initial.identitySource ?? "NONE",
     identityKey: initial.identityKey ?? "",
+    maxAutoToursPerVisit: initial.maxAutoToursPerVisit?.toString() ?? "",
+    themeColor: initial.themeColor ?? "",
   });
   const [saved, setSaved] = React.useState(false);
   const schema: ZodTypeAny = mode === "create" ? createProjectSchema : updateProjectSchema;
@@ -100,7 +106,12 @@ export function ProjectForm({
         .map((s) => s.trim())
         .filter(Boolean),
       ...(mode === "edit"
-        ? { identitySource: values.identitySource, identityKey: values.identityKey }
+        ? {
+            identitySource: values.identitySource,
+            identityKey: values.identityKey,
+            maxAutoToursPerVisit: values.maxAutoToursPerVisit,
+            themeColor: values.themeColor,
+          }
         : {}),
     });
   }
@@ -213,6 +224,57 @@ export function ProjectForm({
               />
             </Field>
           )}
+        </fieldset>
+      )}
+      {mode === "edit" && (
+        <fieldset id="display" className="space-y-4 rounded-lg border border-border p-4">
+          <legend className="px-1 text-sm font-semibold">Tour display</legend>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              id="maxAutoToursPerVisit"
+              label="Automatic tours per visit"
+              hint="Leave empty for no limit. 1 means a visitor sees at most one automatic tour per visit."
+              error={err("maxAutoToursPerVisit")}
+            >
+              <Input
+                {...controlProps("maxAutoToursPerVisit", err("maxAutoToursPerVisit"), "hint")}
+                type="number"
+                min={1}
+                max={10}
+                inputMode="numeric"
+                placeholder="No limit"
+                value={values.maxAutoToursPerVisit}
+                onChange={set("maxAutoToursPerVisit")}
+              />
+            </Field>
+            <Field
+              id="themeColor"
+              label="Brand colour"
+              hint="Used for the tour buttons and the highlight ring. Empty uses Waypoint’s blue."
+              error={err("themeColor")}
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  aria-label="Pick brand colour"
+                  className="h-9 w-12 cursor-pointer rounded-md border border-border bg-background p-1"
+                  value={
+                    /^#[0-9a-fA-F]{6}$/.test(values.themeColor) ? values.themeColor : "#3b4fd8"
+                  }
+                  onChange={set("themeColor")}
+                />
+                <Input
+                  {...controlProps("themeColor", err("themeColor"), "hint")}
+                  value={values.themeColor}
+                  onChange={set("themeColor")}
+                  placeholder="#3B4FD8"
+                  className="font-mono"
+                  spellCheck={false}
+                  autoComplete="off"
+                />
+              </div>
+            </Field>
+          </div>
         </fieldset>
       )}
       <div className="flex gap-2">

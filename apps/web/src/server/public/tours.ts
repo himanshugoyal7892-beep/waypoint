@@ -19,6 +19,8 @@ export async function resolvePublicProject(publicKey: string, origin: string | n
       identitySource: true,
       identityKey: true,
       identitySalt: true,
+      maxAutoToursPerVisit: true,
+      themeColor: true,
     },
   });
   if (!project) throw notFound("Project");
@@ -35,7 +37,8 @@ export async function resolvePublicProject(publicKey: string, origin: string | n
 export async function getEligibleTours(projectId: string, path: string): Promise<PublicTour[]> {
   const tours = await db.tour.findMany({
     where: { projectId, status: "PUBLISHED" },
-    orderBy: { publishedAt: "asc" },
+    // Highest priority first; ties go to the tour published first.
+    orderBy: [{ priority: "desc" }, { publishedAt: "asc" }],
     select: {
       id: true,
       version: true,
@@ -43,6 +46,8 @@ export async function getEligibleTours(projectId: string, path: string): Promise
       triggerType: true,
       frequency: true,
       startUrl: true,
+      device: true,
+      waitSeconds: true,
       steps: {
         orderBy: { stepOrder: "asc" },
         select: {
@@ -61,12 +66,14 @@ export async function getEligibleTours(projectId: string, path: string): Promise
     },
   });
   const here = normalizePathname(path);
-  return tours.filter(
-    (t) =>
-      t.steps.length > 0 &&
-      (matchPathPattern(t.startUrl, here) ||
-        t.steps.some((s) => normalizePathname(s.pageUrl) === here)),
-  );
+  return tours
+    .filter(
+      (t) =>
+        t.steps.length > 0 &&
+        (matchPathPattern(t.startUrl, here) ||
+          t.steps.some((s) => normalizePathname(s.pageUrl) === here)),
+    )
+    .map(({ waitSeconds, ...t }) => ({ ...t, waitMs: waitSeconds * 1000 }));
 }
 
 /** The project's "who is this user" setting, as the SDK needs it (null when not configured). */

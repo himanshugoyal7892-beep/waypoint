@@ -6,7 +6,7 @@ export const STYLES = `
 * { box-sizing: border-box; }
 .highlight {
   position: fixed; z-index: ${Z_INDEX}; pointer-events: none; border-radius: 8px;
-  box-shadow: 0 0 0 4px rgba(99,112,255,.9), 0 0 0 100vmax rgba(15,23,42,.55);
+  box-shadow: 0 0 0 4px var(--wp-primary, #6370ff), 0 0 0 100vmax rgba(15,23,42,.55);
 }
 .tooltip {
   position: fixed; top: 0; left: 0; z-index: ${Z_INDEX + 1}; width: max-content; max-width: min(360px, calc(100vw - 24px));
@@ -31,9 +31,9 @@ export const STYLES = `
   border: 1px solid #e2e8f0; color: #0f172a; background: #fff;
 }
 .btn:hover { background: #f8fafc; }
-.btn.primary { background: #3b4fd8; border-color: #3b4fd8; color: #fff; }
-.btn.primary:hover { background: #3243c4; }
+.btn.primary { background: var(--wp-primary, #3b4fd8); border-color: var(--wp-primary, #3b4fd8); color: #fff; }
+.btn.primary:hover { filter: brightness(0.92); background: var(--wp-primary, #3b4fd8); }
 .btn.link { border-color: transparent; color: #64748b; padding-left: 4px; padding-right: 4px; }
-.btn:focus-visible, .close:focus-visible { outline: 2px solid #3b4fd8; outline-offset: 2px; }
+.btn:focus-visible, .close:focus-visible { outline: 2px solid var(--wp-primary, #3b4fd8); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 `;

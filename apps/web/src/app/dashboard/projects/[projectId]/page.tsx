@@ -120,6 +120,8 @@ export default async function ProjectOverviewPage({
                 allowedOrigins: project.allowedOrigins,
                 identitySource: project.identitySource,
                 identityKey: project.identityKey,
+                maxAutoToursPerVisit: project.maxAutoToursPerVisit,
+                themeColor: project.themeColor,
               }}
             />
           </CardContent>

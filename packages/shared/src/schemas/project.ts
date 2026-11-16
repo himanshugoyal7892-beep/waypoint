@@ -79,6 +79,33 @@ export const updateProjectSchema = createProjectSchema
   .extend({
     identitySource: z.enum(IDENTITY_SOURCES).optional(),
     identityKey: z.union([z.string(), z.null()]).optional(),
+    maxAutoToursPerVisit: z
+      .union([z.number(), z.string(), z.null()])
+      .transform((v, ctx) => {
+        if (v === null || v === "") return null;
+        const n = Number(v);
+        if (!Number.isInteger(n) || n < 1 || n > 10) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Enter a number from 1 to 10, or leave empty.",
+          });
+          return z.NEVER;
+        }
+        return n;
+      })
+      .optional(),
+    themeColor: z
+      .union([z.string(), z.null()])
+      .transform((v, ctx) => {
+        const s = (v ?? "").trim();
+        if (!s) return null;
+        if (!/^#[0-9a-fA-F]{6}$/.test(s)) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Use a colour like #3B4FD8." });
+          return z.NEVER;
+        }
+        return s.toUpperCase();
+      })
+      .optional(),
   })
   .refine((v) => Object.keys(v).length > 0, "Provide at least one field to update.")
   .superRefine((v, ctx) => {

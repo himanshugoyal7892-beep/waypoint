@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { AUDIENCES, FREQUENCIES, TOUR_STATUSES, TRIGGER_TYPES } from "../enums";
+import {
+  AUDIENCES,
+  DEVICE_TARGETS,
+  FREQUENCIES,
+  LOGIN_STATES,
+  TOUR_STATUSES,
+  TRIGGER_TYPES,
+} from "../enums";
 import { LIMITS } from "../limits";
 import { TARGETING_LIMITS, targetingIssues, type TourRules } from "../targeting";
 import { validatePathPattern } from "../url";
@@ -38,6 +45,19 @@ export const dateOnlySchema = z.union([z.string(), z.null()]).transform((v, ctx)
   return d;
 });
 
+const intInRange = (label: string, min: number, max: number) =>
+  z.union([z.number(), z.string()]).transform((v, ctx) => {
+    const n = typeof v === "number" ? v : Number(String(v).trim() || NaN);
+    if (!Number.isInteger(n) || n < min || n > max) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${label} must be a whole number from ${min} to ${max}.`,
+      });
+      return z.NEVER;
+    }
+    return n;
+  });
+
 const wholeNumber = (label: string, max: number) =>
   z.union([z.number(), z.string(), z.null()]).transform((v, ctx) => {
     if (v === null || v === "") return null;
@@ -62,6 +82,10 @@ export const targetingFields = {
   intervalDays: wholeNumber("Days", TARGETING_LIMITS.days),
   startsAt: dateOnlySchema,
   endsAt: dateOnlySchema,
+  loginState: z.enum(LOGIN_STATES, { errorMap: () => ({ message: "Choose who sees it." }) }),
+  device: z.enum(DEVICE_TARGETS, { errorMap: () => ({ message: "Choose a device." }) }),
+  priority: intInRange("Priority", 0, TARGETING_LIMITS.priority),
+  waitSeconds: intInRange("Wait time", 1, TARGETING_LIMITS.waitSeconds),
 };
 
 export const DEFAULT_TARGETING: TourRules = {
@@ -73,6 +97,7 @@ export const DEFAULT_TARGETING: TourRules = {
   intervalDays: null,
   startsAt: null,
   endsAt: null,
+  loginState: "ANY",
 };
 
 export const createTourSchema = z
@@ -87,6 +112,10 @@ export const createTourSchema = z
     intervalDays: targetingFields.intervalDays.optional().transform((v) => v ?? null),
     startsAt: targetingFields.startsAt.optional().transform((v) => v ?? null),
     endsAt: targetingFields.endsAt.optional().transform((v) => v ?? null),
+    loginState: targetingFields.loginState.default("ANY"),
+    device: targetingFields.device.default("ANY"),
+    priority: targetingFields.priority.default(0),
+    waitSeconds: targetingFields.waitSeconds.default(5),
   })
   .superRefine((v, ctx) => {
     for (const i of targetingIssues(v))

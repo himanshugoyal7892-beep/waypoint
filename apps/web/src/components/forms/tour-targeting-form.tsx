@@ -25,6 +25,10 @@ export interface TargetingValues {
   intervalDays: string;
   startsAt: string;
   endsAt: string;
+  loginState: "ANY" | "LOGGED_IN" | "LOGGED_OUT";
+  device: "ANY" | "DESKTOP" | "MOBILE";
+  priority: string;
+  waitSeconds: string;
 }
 
 const AUDIENCE_HELP: Record<Audience, string> = {
@@ -99,6 +103,10 @@ export function TourTargetingForm({
           intervalDays: v.frequency === "INTERVAL" ? v.intervalDays : null,
           startsAt: v.startsAt,
           endsAt: v.endsAt,
+          loginState: v.loginState,
+          device: v.device,
+          priority: v.priority || "0",
+          waitSeconds: v.waitSeconds || "5",
         });
       }}
     >
@@ -106,8 +114,8 @@ export function TourTargetingForm({
       {saved && <Alert tone="info">Targeting saved. Published tours use it right away.</Alert>}
       {manual && (
         <Alert tone="info">
-          This tour starts manually, so these rules don’t apply. It still runs from a link or a
-          button on your site.
+          This tour starts manually, so the audience and timing rules don’t apply. It runs from a
+          link or a button on your site. “Wait for elements” still applies.
         </Alert>
       )}
 
@@ -128,6 +136,53 @@ export function TourTargetingForm({
             <option value="NEW_USERS">New visitors</option>
             <option value="DORMANT_USERS">Returning after a break</option>
             <option value="EXISTING_USERS">Existing visitors only (new feature)</option>
+          </NativeSelect>
+        </Field>
+        <Field
+          id="t-login"
+          label="Logged in or not"
+          hint={
+            v.loginState === "LOGGED_IN"
+              ? "Only people the site recognises as logged in, e.g. a tour of account pages."
+              : v.loginState === "LOGGED_OUT"
+                ? "Only visitors who aren't logged in, e.g. a sign-up tour."
+                : "Logged-in and logged-out visitors alike."
+          }
+          error={err("loginState")}
+        >
+          <NativeSelect
+            {...controlProps("t-login", err("loginState"), "hint")}
+            value={v.loginState}
+            onChange={set("loginState")}
+          >
+            <option value="ANY">Everyone</option>
+            <option value="LOGGED_IN">Logged-in users only</option>
+            <option value="LOGGED_OUT">Logged-out visitors only</option>
+          </NativeSelect>
+        </Field>
+        {v.loginState !== "ANY" && !identityConfigured && (
+          <Alert tone="warning">
+            Waypoint can only tell who is logged in once{" "}
+            <a className="underline" href={`${projectHref}#identity`}>
+              Recognise logged-in users
+            </a>{" "}
+            is set up for this project.
+          </Alert>
+        )}
+        <Field
+          id="t-device"
+          label="Device"
+          hint="Desktop means a window at least 1024 px wide. Pick the layout your steps were built on."
+          error={err("device")}
+        >
+          <NativeSelect
+            {...controlProps("t-device", err("device"), "hint")}
+            value={v.device}
+            onChange={set("device")}
+          >
+            <option value="ANY">Any device</option>
+            <option value="DESKTOP">Desktop only</option>
+            <option value="MOBILE">Mobile only</option>
           </NativeSelect>
         </Field>
         {needsDays && (
@@ -257,7 +312,46 @@ export function TourTargetingForm({
         <p className="text-xs text-muted-foreground">Dates are whole days in UTC.</p>
       </fieldset>
 
-      <Button type="submit" disabled={submitting || manual}>
+      <fieldset className="space-y-4">
+        <legend className="text-sm font-semibold">Advanced</legend>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            id="t-priority"
+            label="Priority (0–100)"
+            hint="If several automatic tours could start on a page, the highest number wins."
+            error={err("priority")}
+          >
+            <Input
+              {...controlProps("t-priority", err("priority"), "hint")}
+              type="number"
+              min={0}
+              max={100}
+              inputMode="numeric"
+              value={v.priority}
+              onChange={set("priority")}
+              disabled={manual}
+            />
+          </Field>
+          <Field
+            id="t-wait"
+            label="Wait for elements (seconds)"
+            hint="For slow pages or menus that load late. Applies to links too."
+            error={err("waitSeconds")}
+          >
+            <Input
+              {...controlProps("t-wait", err("waitSeconds"), "hint")}
+              type="number"
+              min={1}
+              max={30}
+              inputMode="numeric"
+              value={v.waitSeconds}
+              onChange={set("waitSeconds")}
+            />
+          </Field>
+        </div>
+      </fieldset>
+
+      <Button type="submit" disabled={submitting}>
         {submitting && <Loader2 className="animate-spin" aria-hidden />}
         {submitting ? "Saving…" : "Save targeting"}
       </Button>

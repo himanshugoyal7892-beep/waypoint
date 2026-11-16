@@ -55,6 +55,19 @@ export class TourUI {
   private static readonly live = new Set<TourUI>();
 
   /** Destroys every live tooltip (used by tests and full teardown). */
+  private static themeColor: string | null = null;
+
+  /** Brand colour for buttons and highlight (from the project's settings). */
+  static setTheme(color: string | null) {
+    TourUI.themeColor = color && /^#[0-9a-fA-F]{6}$/.test(color) ? color : null;
+    for (const ui of TourUI.live) ui.applyTheme();
+  }
+
+  private applyTheme() {
+    if (TourUI.themeColor) this.host.style.setProperty("--wp-primary", TourUI.themeColor);
+    else this.host.style.removeProperty("--wp-primary");
+  }
+
   static destroyAll() {
     for (const ui of Array.from(TourUI.live)) ui.destroy();
   }
@@ -78,6 +91,7 @@ export class TourUI {
     this.highlight = el("div", "highlight");
     this.highlight.setAttribute("aria-hidden", "true");
     this.root.append(style, this.highlight);
+    this.applyTheme();
     document.documentElement.appendChild(this.host);
     this.release = keepAttached(this.host);
     TourUI.live.add(this);
