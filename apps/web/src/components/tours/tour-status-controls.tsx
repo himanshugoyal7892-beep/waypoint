@@ -5,6 +5,7 @@ import { Archive, ArchiveRestore, Loader2, Rocket, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { useToast } from "@/components/toast";
 import { TourStatusBadge } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/misc";
@@ -37,11 +38,19 @@ export function TourStatusControls({
   projectHref: string;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [busy, setBusy] = React.useState<Action | null>(null);
   const [issues, setIssues] = React.useState<PublishIssue[]>(initialIssues);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => setIssues(initialIssues), [initialIssues]);
+
+  const DONE: Record<Action, string> = {
+    publish: "Tour published",
+    unpublish: "Tour unpublished",
+    archive: "Tour archived",
+    restore: "Tour restored as a draft",
+  };
 
   async function run(action: Action) {
     setBusy(action);
@@ -49,6 +58,7 @@ export function TourStatusControls({
     try {
       await apiFetch(`/api/admin/v1/tours/${tourId}/${action}`, { method: "POST" });
       if (action === "publish") setIssues([]);
+      toast.success(DONE[action]);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiClientError && err.code === "PUBLISH_VALIDATION_FAILED")

@@ -1,6 +1,5 @@
-import { BarChart3, Plus } from "lucide-react";
+import { BarChart3, Link2, ListOrdered, Plus, Users } from "lucide-react";
 import { HealthBadge, HealthPanel } from "@/components/insights";
-import { cn } from "@/lib/utils";
 import { getProjectInsights } from "@/server/insights/service";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -9,13 +8,15 @@ import { DeleteTourButton } from "@/components/delete-buttons";
 import { CopyButton } from "@/components/common";
 import { TourForm } from "@/components/forms/tour-form";
 import { TourTargetingForm } from "@/components/forms/tour-targeting-form";
-import { EmptyState, PageHeader } from "@/components/layout";
+import { EmptyState, PageHeader, TabNav } from "@/components/layout";
 import { BuilderPassCard } from "@/components/tours/builder-pass-card";
 import { StepList } from "@/components/tours/step-list";
 import { TourStatusControls } from "@/components/tours/tour-status-controls";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { loadOr404 } from "@/lib/page-data";
+import { siteOrigin, tipOf } from "@/lib/tip";
+import { TourPlayer } from "@/components/tip-preview";
 import { PRODUCT } from "@waypoint/shared/product-config";
 import { requirePageUser } from "@/server/auth";
 import { checkPublishable, getTour } from "@/server/services/tours";
@@ -53,10 +54,7 @@ export default async function TourPage({
   const base = `${projectHref}/tours/${tour.id}`;
   // Prefer a real website over local development origins for the builder.
   const origins = tour.project.allowedOrigins;
-  const firstOrigin =
-    origins.find((o) => !/^http:\/\/(localhost|127\.0\.0\.1)/.test(o)) ??
-    origins[0] ??
-    "http://localhost:5173";
+  const firstOrigin = siteOrigin(origins);
   const startPath = tour.startUrl.includes("*") ? "/" : tour.startUrl;
   const linkPage = tour.steps[0]?.pageUrl ?? startPath;
   const shareLink = `${firstOrigin}${linkPage}?${PRODUCT.sdk.startQueryParam}=${encodeURIComponent(tour.id)}`;
@@ -88,23 +86,26 @@ export default async function TourPage({
         }
       />
 
-      <nav aria-label="Tour sections" className="mb-5 flex gap-1 border-b border-border">
-        {TABS.map((t) => (
-          <Link
-            key={t.key}
-            href={t.key === "steps" ? base : `${base}?tab=${t.key}`}
-            aria-current={tab === t.key ? "page" : undefined}
-            className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-medium",
-              tab === t.key
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+      <TabNav
+        label="Tour sections"
+        current={tab}
+        tabs={[
+          {
+            key: "steps",
+            label: "Steps",
+            href: base,
+            icon: <ListOrdered aria-hidden />,
+            count: tour.steps.length,
+          },
+          { key: "who", label: "Who & when", href: `${base}?tab=who`, icon: <Users aria-hidden /> },
+          {
+            key: "details",
+            label: "Details & link",
+            href: `${base}?tab=details`,
+            icon: <Link2 aria-hidden />,
+          },
+        ]}
+      />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="space-y-6">
@@ -236,6 +237,24 @@ export default async function TourPage({
               />
             </CardContent>
           </Card>
+          {tour.steps.length > 0 && (
+            <Card id="preview">
+              <CardHeader>
+                <CardTitle>Preview</CardTitle>
+                <CardDescription>
+                  Click through the tour the way visitors see it, on a desktop or phone screen.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TourPlayer
+                  steps={tour.steps}
+                  tip={tipOf(tour.project)}
+                  brand={tour.project.themeColor}
+                  origin={firstOrigin}
+                />
+              </CardContent>
+            </Card>
+          )}
           {health && (
             <Card id="health">
               <CardHeader>

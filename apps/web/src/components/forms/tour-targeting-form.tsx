@@ -9,9 +9,11 @@ import {
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { useToast } from "@/components/toast";
 import { Field, FormError, controlProps } from "@/components/field";
 import { Button } from "@/components/ui/button";
-import { Input, NativeSelect } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Alert } from "@/components/ui/misc";
 import { apiFetch } from "@/lib/api-client";
 import { pickError, useFormSubmit } from "./use-form-submit";
@@ -59,19 +61,18 @@ export function TourTargetingForm({
   projectHref: string;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [v, setV] = React.useState<TargetingValues>(initial);
-  const [saved, setSaved] = React.useState(false);
   const { errors, formError, submitting, submit } = useFormSubmit(
     updateTourSchema,
     async (data) => {
       await apiFetch(`/api/admin/v1/tours/${tourId}`, { method: "PATCH", body: data });
-      setSaved(true);
+      toast.success("Targeting saved", "Published tours use it right away.");
       router.refresh();
     },
   );
   const set =
     (k: keyof TargetingValues) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      setSaved(false);
       setV((prev) => {
         const next = { ...prev, [k]: e.target.value };
         // Sensible starting numbers when a choice first needs one.
@@ -111,7 +112,6 @@ export function TourTargetingForm({
       }}
     >
       <FormError message={formError} />
-      {saved && <Alert tone="info">Targeting saved. Published tours use it right away.</Alert>}
       {manual && (
         <Alert tone="info">
           This tour starts manually, so the audience and timing rules don’t apply. It runs from a
@@ -127,7 +127,7 @@ export function TourTargetingForm({
           hint={AUDIENCE_HELP[v.audience]}
           error={err("audience")}
         >
-          <NativeSelect
+          <Select
             {...controlProps("t-audience", err("audience"), "hint")}
             value={v.audience}
             onChange={set("audience")}
@@ -136,7 +136,7 @@ export function TourTargetingForm({
             <option value="NEW_USERS">New visitors</option>
             <option value="DORMANT_USERS">Returning after a break</option>
             <option value="EXISTING_USERS">Existing visitors only (new feature)</option>
-          </NativeSelect>
+          </Select>
         </Field>
         <Field
           id="t-login"
@@ -150,7 +150,7 @@ export function TourTargetingForm({
           }
           error={err("loginState")}
         >
-          <NativeSelect
+          <Select
             {...controlProps("t-login", err("loginState"), "hint")}
             value={v.loginState}
             onChange={set("loginState")}
@@ -158,7 +158,7 @@ export function TourTargetingForm({
             <option value="ANY">Everyone</option>
             <option value="LOGGED_IN">Logged-in users only</option>
             <option value="LOGGED_OUT">Logged-out visitors only</option>
-          </NativeSelect>
+          </Select>
         </Field>
         {v.loginState !== "ANY" && !identityConfigured && (
           <Alert tone="warning">
@@ -175,7 +175,7 @@ export function TourTargetingForm({
           hint="Desktop means a window at least 1024 px wide. Pick the layout your steps were built on."
           error={err("device")}
         >
-          <NativeSelect
+          <Select
             {...controlProps("t-device", err("device"), "hint")}
             value={v.device}
             onChange={set("device")}
@@ -183,7 +183,7 @@ export function TourTargetingForm({
             <option value="ANY">Any device</option>
             <option value="DESKTOP">Desktop only</option>
             <option value="MOBILE">Mobile only</option>
-          </NativeSelect>
+          </Select>
         </Field>
         {needsDays && (
           <Field
@@ -249,7 +249,7 @@ export function TourTargetingForm({
           hint={FREQUENCY_HELP[v.frequency]}
           error={err("frequency")}
         >
-          <NativeSelect
+          <Select
             {...controlProps("t-frequency", err("frequency"), "hint")}
             value={v.frequency}
             onChange={set("frequency")}
@@ -257,7 +257,7 @@ export function TourTargetingForm({
             <option value="ONCE">Once</option>
             <option value="UNTIL_COMPLETED">Until finished</option>
             <option value="INTERVAL">Repeat every few days</option>
-          </NativeSelect>
+          </Select>
         </Field>
         {v.frequency !== "ONCE" && (
           <div className="grid gap-4 sm:grid-cols-2">

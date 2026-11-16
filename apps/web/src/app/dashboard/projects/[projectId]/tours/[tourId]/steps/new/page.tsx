@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StepForm } from "@/components/forms/step-form";
 import { PageHeader } from "@/components/layout";
-import { Card, CardContent } from "@/components/ui/card";
 import { loadOr404 } from "@/lib/page-data";
+import { siteOrigin, tipOf } from "@/lib/tip";
 import { requirePageUser } from "@/server/auth";
 import { getTour } from "@/server/services/tours";
 
@@ -23,7 +23,7 @@ export default async function NewStepPage({
   const nextOrder = tour.steps.length + 1;
 
   return (
-    <div className="max-w-3xl">
+    <div>
       <PageHeader
         title={`Add step ${nextOrder}`}
         description={`To “${tour.name}”`}
@@ -32,28 +32,30 @@ export default async function NewStepPage({
           { href: tourHref, label: tour.name },
         ]}
       />
-      <Card>
-        <CardContent className="pt-5">
-          <StepForm
-            mode="create"
-            tourId={tourId}
-            backHref={tourHref}
-            maxOrder={nextOrder}
-            initial={{
-              stepOrder: nextOrder,
-              // New steps usually continue on the same page as the previous one.
-              pageUrl: last?.pageUrl ?? (tour.startUrl.includes("*") ? "/" : tour.startUrl),
-              cssSelector: "",
-              title: "",
-              description: "",
-              placement: "AUTO",
-              nextButtonLabel: "Next",
-              backButtonLabel: "Back",
-              allowSkip: true,
-            }}
-          />
-        </CardContent>
-      </Card>
+      <StepForm
+        mode="create"
+        tourId={tourId}
+        backHref={tourHref}
+        preview={{
+          tip: tipOf(tour.project),
+          brand: tour.project.themeColor,
+          origin: siteOrigin(tour.project.allowedOrigins),
+          total: tour.steps.length + 1,
+        }}
+        maxOrder={nextOrder}
+        initial={{
+          stepOrder: nextOrder,
+          // New steps usually continue on the same page as the previous one.
+          pageUrl: last?.pageUrl ?? (tour.startUrl.includes("*") ? "/" : tour.startUrl),
+          cssSelector: "",
+          title: "",
+          description: "",
+          placement: "AUTO",
+          nextButtonLabel: "Next",
+          backButtonLabel: "Back",
+          allowSkip: true,
+        }}
+      />
     </div>
   );
 }

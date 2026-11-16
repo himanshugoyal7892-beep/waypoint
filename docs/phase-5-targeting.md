@@ -142,12 +142,21 @@ Verified locally: `verify.sh` green (shared 70, web 41, sdk 69 tests). Targeting
 
 **Visitor tips.** Project → Settings → Tour display, with a live preview:
 
-| Setting | Options | Default |
-|---|---|---|
-| Tip style | Light, Dark, Brand colour | Light |
-| Corners | Rounded, Soft, Square | Rounded |
-| Progress | "2 of 4", Dots, Bar, Hidden | "2 of 4" |
-| Font | Standard, Same as website | Standard |
-| Dim the page | on / off | on |
+| Setting      | Options                     | Default  |
+| ------------ | --------------------------- | -------- |
+| Tip style    | Light, Dark, Brand colour   | Light    |
+| Corners      | Rounded, Soft, Square       | Rounded  |
+| Progress     | "2 of 4", Dots, Bar, Hidden | "2 of 4" |
+| Font         | Standard, Same as website   | Standard |
+| Dim the page | on / off                    | on       |
 
 The public tours API returns these as `settings.tip`; the SDK whitelists the values and sets CSS variables on the tooltip (`@waypoint/shared/tip-theme`, shared by the SDK and the dashboard preview). Screen readers always hear "N of M", whatever the progress style. The visitor script is now 16.9 KB gzipped (budget 25 KB).
+
+## Dashboard controls, feedback and previews (17 Nov 2026)
+
+- **Controls:** custom dropdown (`ui/select.tsx`, same API as a native select, ARIA select-only combobox with arrows, Home/End, type-ahead, Escape); on/off switch (`ui/switch.tsx`); tab bar with icons and counts (`TabNav`); status badges with a coloured dot.
+- **Tours list:** search, sortable columns (name, health, steps, updated), status tabs with counts, row hover with Edit and Analytics actions, relative "updated" times. Analytics tables gained row hover.
+- **Feedback:** toast messages (`components/toast.tsx`, provider in the dashboard layout) after saving, creating, deleting, publishing and reordering; page-shaped loading skeletons for tours, tour and analytics pages; filtered empty state offers "Show all tours".
+- **Step editor:** live preview beside the form (desktop or phone) that updates as you type, using the project's tip look.
+- **Tour page:** Preview card that plays the whole tour on a small desktop or phone screen. The tip's own buttons work (Back, Next, Skip, Finish), as do the controls below it.
+- Shared drawing in `components/tip-preview.tsx` (`TipCard`, `MockScreen`, `TourPlayer`) follows the real script's button rules.

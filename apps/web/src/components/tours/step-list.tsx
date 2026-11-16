@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { useToast } from "@/components/toast";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Button } from "@/components/ui/button";
 import { Alert, Badge } from "@/components/ui/misc";
@@ -30,6 +31,7 @@ export function StepList({
   baseHref: string;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [order, setOrder] = React.useState(steps);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -63,6 +65,7 @@ export function StepList({
 
   async function remove(id: string) {
     await apiFetch(`/api/admin/v1/steps/${id}`, { method: "DELETE" });
+    toast.success("Step deleted");
     router.refresh();
   }
 
@@ -79,28 +82,42 @@ export function StepList({
         aria-label="Tour steps"
       >
         {order.map((s, i) => (
-          <li key={s.id} className="flex flex-wrap items-center gap-3 p-3 sm:flex-nowrap">
+          <li
+            key={s.id}
+            className="group flex flex-wrap items-center gap-3 p-3 transition-colors hover:bg-muted/40 sm:flex-nowrap"
+          >
             <span
-              className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-soft font-display text-sm font-semibold text-primary ring-1 ring-primary/15"
               aria-hidden
             >
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">
+              <Link
+                href={`${baseHref}/steps/${s.id}`}
+                className="block truncate text-sm font-medium hover:text-primary"
+              >
                 <span className="sr-only">Step {i + 1}: </span>
                 {label(s)}
-              </p>
-              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span className="font-mono">{s.pageUrl}</span>
-                <span className="max-w-[28ch] truncate font-mono" title={s.cssSelector}>
+              </Link>
+              {s.title && s.description && (
+                <p className="truncate text-xs text-muted-foreground">{s.description}</p>
+              )}
+              <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono">{s.pageUrl}</span>
+                <span
+                  className="max-w-[26ch] truncate rounded-md bg-muted px-1.5 py-0.5 font-mono"
+                  title={s.cssSelector}
+                >
                   {s.cssSelector}
                 </span>
-                <Badge variant="muted">{s.placement.toLowerCase()}</Badge>
-                {!s.allowSkip && <Badge variant="muted">no skip</Badge>}
+                <Badge variant="muted" className="capitalize">
+                  {s.placement === "AUTO" ? "auto place" : s.placement.toLowerCase()}
+                </Badge>
+                {!s.allowSkip && <Badge variant="warning">no skip</Badge>}
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
               <Button
                 variant="ghost"
                 size="icon"

@@ -4,12 +4,14 @@ import { createProjectSchema, updateProjectSchema } from "@waypoint/shared";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { useToast } from "@/components/toast";
 import type { ZodTypeAny } from "zod";
 import { Field, FormError, controlProps } from "@/components/field";
 import { Button } from "@/components/ui/button";
 import { TipPreview } from "@/components/tip-preview";
-import { Input, NativeSelect, Textarea } from "@/components/ui/input";
-import { Alert } from "@/components/ui/misc";
+import { Input, Textarea } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { apiFetch } from "@/lib/api-client";
 import { pickError, useFormSubmit } from "./use-form-submit";
 
@@ -75,6 +77,7 @@ export function ProjectForm({
   };
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [values, setValues] = React.useState<Values>({
     name: initial.name,
     domain: initial.domain,
@@ -89,7 +92,6 @@ export function ProjectForm({
     tipFont: initial.tipFont ?? "SYSTEM",
     tipBackdrop: initial.tipBackdrop ?? true,
   });
-  const [saved, setSaved] = React.useState(false);
   const schema: ZodTypeAny = mode === "create" ? createProjectSchema : updateProjectSchema;
   const { errors, formError, submitting, submit } = useFormSubmit(schema, async (data) => {
     if (mode === "create") {
@@ -97,10 +99,11 @@ export function ProjectForm({
         method: "POST",
         body: data,
       });
+      toast.success("Project created");
       router.push(`/dashboard/projects/${project.id}/install`);
     } else {
       await apiFetch(`/api/admin/v1/projects/${projectId}`, { method: "PATCH", body: data });
-      setSaved(true);
+      toast.success("Settings saved");
       router.refresh();
     }
   });
@@ -108,7 +111,6 @@ export function ProjectForm({
   const set =
     (k: keyof Values) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      setSaved(false);
       setValues((v) => ({ ...v, [k]: e.target.value }));
     };
 
@@ -147,7 +149,6 @@ export function ProjectForm({
       aria-label={mode === "create" ? "Create project" : "Project settings"}
     >
       <FormError message={formError} />
-      {saved && <Alert tone="info">Project settings saved.</Alert>}
       <Field id="name" label="Project name" required error={err("name")}>
         <Input
           {...controlProps("name", err("name"))}
@@ -209,7 +210,7 @@ export function ProjectForm({
             hint={IDENTITY_HELP[values.identitySource]}
             error={err("identitySource")}
           >
-            <NativeSelect
+            <Select
               {...controlProps("identitySource", err("identitySource"), "hint")}
               value={values.identitySource}
               onChange={set("identitySource")}
@@ -218,7 +219,7 @@ export function ProjectForm({
               <option value="WINDOW">Page variable</option>
               <option value="DATALAYER">Google Tag Manager field</option>
               <option value="COOKIE">Cookie</option>
-            </NativeSelect>
+            </Select>
           </Field>
           {values.identitySource !== "NONE" && (
             <Field
@@ -302,7 +303,7 @@ export function ProjectForm({
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
             <div className="grid content-start gap-4 sm:grid-cols-2">
               <Field id="tipStyle" label="Tip style">
-                <NativeSelect
+                <Select
                   id="tipStyle"
                   value={values.tipStyle}
                   onChange={(e) =>
@@ -312,10 +313,10 @@ export function ProjectForm({
                   <option value="LIGHT">Light</option>
                   <option value="DARK">Dark</option>
                   <option value="BRAND">Brand colour</option>
-                </NativeSelect>
+                </Select>
               </Field>
               <Field id="tipCorners" label="Corners">
-                <NativeSelect
+                <Select
                   id="tipCorners"
                   value={values.tipCorners}
                   onChange={(e) =>
@@ -325,10 +326,10 @@ export function ProjectForm({
                   <option value="ROUNDED">Rounded</option>
                   <option value="SOFT">Soft</option>
                   <option value="SQUARE">Square</option>
-                </NativeSelect>
+                </Select>
               </Field>
               <Field id="tipProgress" label="Progress">
-                <NativeSelect
+                <Select
                   id="tipProgress"
                   value={values.tipProgress}
                   onChange={(e) =>
@@ -342,10 +343,10 @@ export function ProjectForm({
                   <option value="DOTS">Dots</option>
                   <option value="BAR">Bar</option>
                   <option value="NONE">Hidden</option>
-                </NativeSelect>
+                </Select>
               </Field>
               <Field id="tipFont" label="Font">
-                <NativeSelect
+                <Select
                   id="tipFont"
                   value={values.tipFont}
                   onChange={(e) =>
@@ -354,17 +355,16 @@ export function ProjectForm({
                 >
                   <option value="SYSTEM">Standard</option>
                   <option value="SITE">Same as website</option>
-                </NativeSelect>
+                </Select>
               </Field>
-              <label className="flex items-center gap-2 text-sm sm:col-span-2">
-                <input
-                  type="checkbox"
-                  className="size-4 accent-[var(--color-primary)]"
-                  checked={values.tipBackdrop}
-                  onChange={(e) => setValues((v) => ({ ...v, tipBackdrop: e.target.checked }))}
-                />
-                Dim the rest of the page while a tip is open
-              </label>
+              <Switch
+                id="tipBackdrop"
+                className="sm:col-span-2"
+                checked={values.tipBackdrop}
+                onCheckedChange={(c) => setValues((v) => ({ ...v, tipBackdrop: c }))}
+                label="Dim the page behind the tip"
+                hint="Helps the highlighted element stand out."
+              />
             </div>
             <div className="space-y-1.5">
               <p className="text-sm font-medium">Preview</p>

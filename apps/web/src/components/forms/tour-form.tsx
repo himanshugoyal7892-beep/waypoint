@@ -4,11 +4,12 @@ import { createTourSchema, updateTourSchema } from "@waypoint/shared";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { useToast } from "@/components/toast";
 import type { ZodTypeAny } from "zod";
 import { Field, FormError, controlProps } from "@/components/field";
 import { Button } from "@/components/ui/button";
-import { Input, NativeSelect, Textarea } from "@/components/ui/input";
-import { Alert } from "@/components/ui/misc";
+import { Input, Textarea } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { apiFetch } from "@/lib/api-client";
 import { pickError, useFormSubmit } from "./use-form-submit";
 
@@ -31,8 +32,8 @@ export function TourForm({
   initial?: Values;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [values, setValues] = React.useState<Values>(initial);
-  const [saved, setSaved] = React.useState(false);
   const schema: ZodTypeAny = mode === "create" ? createTourSchema : updateTourSchema;
   const { errors, formError, submitting, submit } = useFormSubmit(schema, async (data) => {
     if (mode === "create") {
@@ -40,10 +41,11 @@ export function TourForm({
         `/api/admin/v1/projects/${projectId}/tours`,
         { method: "POST", body: data },
       );
+      toast.success("Tour created");
       router.push(`/dashboard/projects/${projectId}/tours/${tour.id}`);
     } else {
       await apiFetch(`/api/admin/v1/tours/${tourId}`, { method: "PATCH", body: data });
-      setSaved(true);
+      toast.success("Tour details saved");
       router.refresh();
     }
   });
@@ -51,7 +53,6 @@ export function TourForm({
   const set =
     (k: keyof Values) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      setSaved(false);
       setValues((v) => ({ ...v, [k]: e.target.value }));
     };
   const err = (k: string) => pickError(errors, k);
@@ -67,7 +68,6 @@ export function TourForm({
       }}
     >
       <FormError message={formError} />
-      {saved && <Alert tone="info">Tour details saved.</Alert>}
       <Field id="tour-name" label="Tour name" required error={err("name")}>
         <Input
           {...controlProps("tour-name", err("name"))}
@@ -119,14 +119,14 @@ export function TourForm({
           error={err("triggerType")}
           hint="Automatic follows the rules under “Who sees it and when”. Manual starts from a link or your code."
         >
-          <NativeSelect
+          <Select
             {...controlProps("tour-trigger", err("triggerType"), "hint")}
             value={values.triggerType}
             onChange={set("triggerType")}
           >
             <option value="AUTO">Automatic</option>
             <option value="MANUAL">Manual (link or ProductTour.start)</option>
-          </NativeSelect>
+          </Select>
         </Field>
       </div>
       <Button type="submit" disabled={submitting}>

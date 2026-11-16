@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import { ToastProvider } from "@/components/toast";
 import { requirePageUser } from "@/server/auth";
 import { listProjects } from "@/server/services/projects";
 
@@ -6,7 +7,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await requirePageUser();
   const projects = await listProjects(user.id);
   return (
-    <>
+    <ToastProvider>
       <a href="#main" className="skip-link">
         Skip to content
       </a>
@@ -19,6 +20,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {children}
         </main>
       </div>
-    </>
+    </ToastProvider>
   );
 }

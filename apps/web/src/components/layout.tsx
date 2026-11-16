@@ -126,10 +126,70 @@ export function StatCard({
 
 export function TourStatusBadge({ status }: { status: "DRAFT" | "PUBLISHED" | "ARCHIVED" }) {
   const map = {
-    DRAFT: { variant: "warning", label: "Draft" },
-    PUBLISHED: { variant: "success", label: "Published" },
-    ARCHIVED: { variant: "muted", label: "Archived" },
+    DRAFT: { variant: "warning", label: "Draft", dot: "bg-warning-strong" },
+    PUBLISHED: { variant: "success", label: "Published", dot: "bg-success-solid" },
+    ARCHIVED: { variant: "muted", label: "Archived", dot: "bg-muted-foreground/60" },
   } as const;
-  const { variant, label } = map[status];
-  return <Badge variant={variant}>{label}</Badge>;
+  const { variant, label, dot } = map[status];
+  return (
+    <Badge variant={variant}>
+      <span
+        aria-hidden
+        className={cn(
+          "size-1.5 rounded-full",
+          dot,
+          status === "PUBLISHED" && "motion-safe:animate-pulse",
+        )}
+      />
+      {label}
+    </Badge>
+  );
+}
+
+/** Section tabs as links (each tab is its own URL, so it survives refresh and sharing). */
+export function TabNav({
+  label,
+  tabs,
+  current,
+}: {
+  label: string;
+  tabs: { key: string; label: string; href: string; icon?: React.ReactNode; count?: number }[];
+  current: string;
+}) {
+  return (
+    <nav
+      aria-label={label}
+      className="mb-6 inline-flex max-w-full gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1 shadow-card"
+    >
+      {tabs.map((t) => {
+        const on = t.key === current;
+        return (
+          <Link
+            key={t.key}
+            href={t.href}
+            aria-current={on ? "page" : undefined}
+            className={cn(
+              "flex items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors [&_svg]:size-4",
+              on
+                ? "bg-primary-soft text-primary shadow-xs"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            {t.icon}
+            {t.label}
+            {t.count !== undefined && (
+              <span
+                className={cn(
+                  "rounded-full px-1.5 text-xs tabular-nums",
+                  on ? "bg-primary/15" : "bg-muted",
+                )}
+              >
+                {t.count}
+              </span>
+            )}
+          </Link>
+        );
+      })}
+    </nav>
+  );
 }

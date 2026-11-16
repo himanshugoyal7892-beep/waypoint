@@ -7,7 +7,8 @@ import { CopyButton } from "@/components/common";
 import { Field, FormError, controlProps } from "@/components/field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input, NativeSelect } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { ApiClientError, apiFetch } from "@/lib/api-client";
 import { formatDate } from "@/lib/utils";
 
@@ -106,14 +107,14 @@ export function BuilderPassCard({
             </Field>
           </div>
           <Field id="builder-mode" label="Access">
-            <NativeSelect
+            <Select
               {...controlProps("builder-mode")}
               value={mode}
               onChange={(e) => setMode(e.target.value as "BUILD" | "PREVIEW")}
             >
               <option value="BUILD">Edit</option>
               <option value="PREVIEW">Preview only</option>
-            </NativeSelect>
+            </Select>
           </Field>
           <Button type="submit" disabled={busy}>
             {busy && <Loader2 className="animate-spin" aria-hidden />} Open visual builder

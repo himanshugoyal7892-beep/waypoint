@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { DeleteStepButton } from "@/components/delete-buttons";
 import { StepForm } from "@/components/forms/step-form";
 import { PageHeader } from "@/components/layout";
-import { Card, CardContent } from "@/components/ui/card";
 import { loadOr404 } from "@/lib/page-data";
+import { siteOrigin, tipOf } from "@/lib/tip";
 import { formatDate } from "@/lib/utils";
 import { requirePageUser } from "@/server/auth";
 import { getTour } from "@/server/services/tours";
@@ -25,7 +25,7 @@ export default async function EditStepPage({
   const label = step.title || step.description.slice(0, 40) || `Step ${step.stepOrder}`;
 
   return (
-    <div className="max-w-3xl">
+    <div>
       <PageHeader
         title={`Edit step ${step.stepOrder}`}
         description={`Last updated ${formatDate(step.updatedAt)}`}
@@ -35,28 +35,30 @@ export default async function EditStepPage({
         ]}
         actions={<DeleteStepButton stepId={step.id} label={label} afterHref={tourHref} />}
       />
-      <Card>
-        <CardContent className="pt-5">
-          <StepForm
-            mode="edit"
-            tourId={tourId}
-            stepId={step.id}
-            backHref={tourHref}
-            maxOrder={tour.steps.length}
-            initial={{
-              stepOrder: step.stepOrder,
-              pageUrl: step.pageUrl,
-              cssSelector: step.cssSelector,
-              title: step.title,
-              description: step.description,
-              placement: step.placement,
-              nextButtonLabel: step.nextButtonLabel,
-              backButtonLabel: step.backButtonLabel,
-              allowSkip: step.allowSkip,
-            }}
-          />
-        </CardContent>
-      </Card>
+      <StepForm
+        mode="edit"
+        tourId={tourId}
+        stepId={step.id}
+        backHref={tourHref}
+        preview={{
+          tip: tipOf(tour.project),
+          brand: tour.project.themeColor,
+          origin: siteOrigin(tour.project.allowedOrigins),
+          total: tour.steps.length,
+        }}
+        maxOrder={tour.steps.length}
+        initial={{
+          stepOrder: step.stepOrder,
+          pageUrl: step.pageUrl,
+          cssSelector: step.cssSelector,
+          title: step.title,
+          description: step.description,
+          placement: step.placement,
+          nextButtonLabel: step.nextButtonLabel,
+          backButtonLabel: step.backButtonLabel,
+          allowSkip: step.allowSkip,
+        }}
+      />
     </div>
   );
 }

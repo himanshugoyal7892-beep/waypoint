@@ -181,7 +181,7 @@ export default async function ProjectAnalyticsPage({
               <p className="text-sm text-muted-foreground">No tours yet.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm [&_td:first-child]:pl-2 [&_th:first-child]:pl-2 [&_td:last-child]:pr-2 [&_th:last-child]:pr-2">
                   <caption className="sr-only">Tour results</caption>
                   <thead className="border-b border-border text-left text-xs text-muted-foreground">
                     <tr>
@@ -207,7 +207,7 @@ export default async function ProjectAnalyticsPage({
                   </thead>
                   <tbody className="divide-y divide-border">
                     {a.tours.map((t) => (
-                      <tr key={t.id}>
+                      <tr className="transition-colors hover:bg-muted/50" key={t.id}>
                         <td className="py-2.5 pr-3">
                           <Link
                             href={`${base}/tours/${t.id}/analytics?days=${days}`}
@@ -250,7 +250,7 @@ export default async function ProjectAnalyticsPage({
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm [&_td:first-child]:pl-2 [&_th:first-child]:pl-2 [&_td:last-child]:pr-2 [&_th:last-child]:pr-2">
                   <caption className="sr-only">Recent visitors</caption>
                   <thead className="border-b border-border text-left text-xs text-muted-foreground">
                     <tr>
@@ -273,7 +273,10 @@ export default async function ProjectAnalyticsPage({
                   </thead>
                   <tbody className="divide-y divide-border">
                     {a.recentVisitors.map((v) => (
-                      <tr key={v.label + v.lastSeenAt}>
+                      <tr
+                        className="transition-colors hover:bg-muted/50"
+                        key={v.label + v.lastSeenAt}
+                      >
                         <td className="py-2.5 pr-3">
                           <span className="font-mono text-xs">{v.label}</span>
                           <span

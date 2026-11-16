@@ -155,7 +155,7 @@ export default async function TourAnalyticsPage({
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm [&_td:first-child]:pl-2 [&_th:first-child]:pl-2 [&_td:last-child]:pr-2 [&_th:last-child]:pr-2">
                   <caption className="sr-only">Visitors reaching each step</caption>
                   <thead className="border-b border-border text-left text-xs text-muted-foreground">
                     <tr>
@@ -178,7 +178,7 @@ export default async function TourAnalyticsPage({
                   </thead>
                   <tbody className="divide-y divide-border">
                     {a.steps.map((s) => (
-                      <tr key={s.stepId}>
+                      <tr className="transition-colors hover:bg-muted/50" key={s.stepId}>
                         <td className="py-2.5 pr-3">
                           <span className="mr-2 inline-flex size-6 items-center justify-center rounded-full bg-muted text-xs font-semibold">
                             {s.stepOrder}

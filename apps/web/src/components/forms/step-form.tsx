@@ -4,10 +4,16 @@ import { PLACEMENTS, createStepSchema, updateStepSchema, type Placement } from "
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { useToast } from "@/components/toast";
 import type { ZodTypeAny } from "zod";
 import { Field, FormError, controlProps } from "@/components/field";
 import { Button } from "@/components/ui/button";
-import { Input, NativeSelect, Textarea } from "@/components/ui/input";
+import { Input, Textarea } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { MockScreen } from "@/components/tip-preview";
+import { cn } from "@/lib/utils";
+import type { PublicTipTheme } from "@waypoint/shared/api-types";
 import { apiFetch } from "@/lib/api-client";
 import { pickError, useFormSubmit } from "./use-form-submit";
 
@@ -38,6 +44,7 @@ export function StepForm({
   backHref,
   maxOrder,
   initial,
+  preview,
 }: {
   mode: "create" | "edit";
   tourId: string;
@@ -46,14 +53,19 @@ export function StepForm({
   /** Highest valid position (step count, +1 when creating). */
   maxOrder: number;
   initial: StepValues;
+  /** Project tip look and site, for the live preview beside the form. */
+  preview?: { tip: PublicTipTheme; brand: string | null; origin: string; total: number };
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [values, setValues] = React.useState<StepValues>(initial);
+  const [device, setDevice] = React.useState<"desktop" | "phone">("desktop");
   const schema: ZodTypeAny = mode === "create" ? createStepSchema : updateStepSchema;
   const { errors, formError, submitting, submit } = useFormSubmit(schema, async (data) => {
     if (mode === "create")
       await apiFetch(`/api/admin/v1/tours/${tourId}/steps`, { method: "POST", body: data });
     else await apiFetch(`/api/admin/v1/steps/${stepId}`, { method: "PATCH", body: data });
+    toast.success(mode === "create" ? "Step added" : "Step saved");
     router.push(backHref);
     router.refresh();
   });
@@ -68,179 +80,222 @@ export function StepForm({
   const err = (k: string) => pickError(errors, k);
 
   return (
-    <form
-      noValidate
-      className="space-y-6"
-      aria-label={mode === "create" ? "Add step" : "Edit step"}
-      onSubmit={(e) => {
-        e.preventDefault();
-        void submit(values);
-      }}
+    <div
+      className={cn(
+        "grid gap-6",
+        preview && "lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]",
+      )}
     >
-      <FormError message={formError} />
+      <form
+        noValidate
+        className="space-y-6 rounded-xl border border-border bg-card p-5 shadow-card sm:p-6"
+        aria-label={mode === "create" ? "Add step" : "Edit step"}
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit(values);
+        }}
+      >
+        <FormError message={formError} />
 
-      <fieldset className="space-y-5">
-        <legend className="mb-3 text-sm font-semibold">Target element</legend>
-        <div className="grid gap-5 sm:grid-cols-[8rem_1fr]">
-          <Field
-            id="step-order"
-            label="Step order"
-            required
-            error={err("stepOrder")}
-            hint={`1 – ${maxOrder}`}
-          >
-            <Input
-              {...controlProps("step-order", err("stepOrder"), "hint")}
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={maxOrder}
-              value={Number.isNaN(values.stepOrder) ? "" : values.stepOrder}
-              onChange={set("stepOrder", (r) => (r === "" ? Number.NaN : Number(r)))}
+        <fieldset className="space-y-5">
+          <legend className="mb-3 text-sm font-semibold">Target element</legend>
+          <div className="grid gap-5 sm:grid-cols-[8rem_1fr]">
+            <Field
+              id="step-order"
+              label="Step order"
               required
-            />
-          </Field>
+              error={err("stepOrder")}
+              hint={`1 – ${maxOrder}`}
+            >
+              <Input
+                {...controlProps("step-order", err("stepOrder"), "hint")}
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={maxOrder}
+                value={Number.isNaN(values.stepOrder) ? "" : values.stepOrder}
+                onChange={set("stepOrder", (r) => (r === "" ? Number.NaN : Number(r)))}
+                required
+              />
+            </Field>
+            <Field
+              id="step-pageUrl"
+              label="Page path"
+              required
+              error={err("pageUrl")}
+              hint={
+                <>
+                  The page this step appears on, without domain or query string, e.g.{" "}
+                  <code>/products/aurora-headphones</code>.
+                </>
+              }
+            >
+              <Input
+                {...controlProps("step-pageUrl", err("pageUrl"), "hint")}
+                value={values.pageUrl}
+                onChange={set("pageUrl")}
+                className="font-mono"
+                spellCheck={false}
+                required
+              />
+            </Field>
+          </div>
           <Field
-            id="step-pageUrl"
-            label="Page path"
+            id="step-cssSelector"
+            label="CSS selector"
             required
-            error={err("pageUrl")}
+            error={err("cssSelector")}
             hint={
               <>
-                The page this step appears on, without domain or query string, e.g.{" "}
-                <code>/products/aurora-headphones</code>.
+                Prefer a stable attribute you add to your markup, e.g.{" "}
+                <code>[data-tour-id=&quot;add-to-cart&quot;]</code>. Avoid auto-generated class
+                names. Or use the visual builder on the tour page to click the element instead.
               </>
             }
           >
             <Input
-              {...controlProps("step-pageUrl", err("pageUrl"), "hint")}
-              value={values.pageUrl}
-              onChange={set("pageUrl")}
+              {...controlProps("step-cssSelector", err("cssSelector"), "hint")}
+              value={values.cssSelector}
+              onChange={set("cssSelector")}
               className="font-mono"
               spellCheck={false}
+              maxLength={1000}
               required
             />
           </Field>
-        </div>
-        <Field
-          id="step-cssSelector"
-          label="CSS selector"
-          required
-          error={err("cssSelector")}
-          hint={
-            <>
-              Prefer a stable attribute you add to your markup, e.g.{" "}
-              <code>[data-tour-id=&quot;add-to-cart&quot;]</code>. Avoid auto-generated class names.
-              The visual element picker arrives in a later phase.
-            </>
-          }
-        >
-          <Input
-            {...controlProps("step-cssSelector", err("cssSelector"), "hint")}
-            value={values.cssSelector}
-            onChange={set("cssSelector")}
-            className="font-mono"
-            spellCheck={false}
-            maxLength={1000}
-            required
-          />
-        </Field>
-      </fieldset>
+        </fieldset>
 
-      <fieldset className="space-y-5">
-        <legend className="mb-3 text-sm font-semibold">Tooltip content</legend>
-        <p className="-mt-2 text-xs text-muted-foreground">
-          Plain text only. A title or a description is required.
-        </p>
-        <Field id="step-title" label="Title" error={err("title")}>
-          <Input
-            {...controlProps("step-title", err("title"))}
-            value={values.title}
-            onChange={set("title")}
-            maxLength={120}
-          />
-        </Field>
-        <Field id="step-description" label="Description" error={err("description")}>
-          <Textarea
-            {...controlProps("step-description", err("description"))}
-            value={values.description}
-            onChange={set("description")}
-            maxLength={1000}
-            rows={4}
-          />
-        </Field>
-      </fieldset>
+        <fieldset className="space-y-5">
+          <legend className="mb-3 text-sm font-semibold">Tooltip content</legend>
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Plain text only. A title or a description is required.
+          </p>
+          <Field id="step-title" label="Title" error={err("title")}>
+            <Input
+              {...controlProps("step-title", err("title"))}
+              value={values.title}
+              onChange={set("title")}
+              maxLength={120}
+            />
+          </Field>
+          <Field id="step-description" label="Description" error={err("description")}>
+            <Textarea
+              {...controlProps("step-description", err("description"))}
+              value={values.description}
+              onChange={set("description")}
+              maxLength={1000}
+              rows={4}
+            />
+          </Field>
+        </fieldset>
 
-      <fieldset className="space-y-5">
-        <legend className="mb-3 text-sm font-semibold">Behaviour</legend>
-        <div className="grid gap-5 sm:grid-cols-3">
-          <Field id="step-placement" label="Placement" error={err("placement")}>
-            <NativeSelect
-              {...controlProps("step-placement", err("placement"))}
-              value={values.placement}
-              onChange={set("placement", (r) => r as Placement)}
-            >
-              {PLACEMENTS.map((p) => (
-                <option key={p} value={p}>
-                  {PLACEMENT_LABELS[p]}
-                </option>
-              ))}
-            </NativeSelect>
-          </Field>
-          <Field id="step-next" label="Next button label" required error={err("nextButtonLabel")}>
-            <Input
-              {...controlProps("step-next", err("nextButtonLabel"))}
-              value={values.nextButtonLabel}
-              onChange={set("nextButtonLabel")}
-              maxLength={30}
-              required
-            />
-          </Field>
-          <Field id="step-back" label="Back button label" required error={err("backButtonLabel")}>
-            <Input
-              {...controlProps("step-back", err("backButtonLabel"))}
-              value={values.backButtonLabel}
-              onChange={set("backButtonLabel")}
-              maxLength={30}
-              required
-            />
-          </Field>
-        </div>
-        <div className="flex items-start gap-2">
-          <input
+        <fieldset className="space-y-5">
+          <legend className="mb-3 text-sm font-semibold">Behaviour</legend>
+          <div className="grid gap-5 sm:grid-cols-3">
+            <Field id="step-placement" label="Placement" error={err("placement")}>
+              <Select
+                {...controlProps("step-placement", err("placement"))}
+                value={values.placement}
+                onChange={set("placement", (r) => r as Placement)}
+              >
+                {PLACEMENTS.map((p) => (
+                  <option key={p} value={p}>
+                    {PLACEMENT_LABELS[p]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field id="step-next" label="Next button label" required error={err("nextButtonLabel")}>
+              <Input
+                {...controlProps("step-next", err("nextButtonLabel"))}
+                value={values.nextButtonLabel}
+                onChange={set("nextButtonLabel")}
+                maxLength={30}
+                required
+              />
+            </Field>
+            <Field id="step-back" label="Back button label" required error={err("backButtonLabel")}>
+              <Input
+                {...controlProps("step-back", err("backButtonLabel"))}
+                value={values.backButtonLabel}
+                onChange={set("backButtonLabel")}
+                maxLength={30}
+                required
+              />
+            </Field>
+          </div>
+          <Switch
             id="step-allowSkip"
-            type="checkbox"
-            className="mt-0.5 size-4 rounded border-border accent-[var(--color-primary)]"
             checked={values.allowSkip}
-            onChange={(e) => setValues((v) => ({ ...v, allowSkip: e.target.checked }))}
-            aria-describedby="step-allowSkip-hint"
+            onCheckedChange={(c) => setValues((v) => ({ ...v, allowSkip: c }))}
+            label="Allow skip"
+            hint="Shows a Skip button so visitors can leave the tour on this step."
           />
-          <div>
-            <label htmlFor="step-allowSkip" className="text-sm font-medium">
-              Allow skip
-            </label>
-            <p id="step-allowSkip-hint" className="text-xs text-muted-foreground">
-              Shows a Skip button so visitors can leave the tour on this step.
+        </fieldset>
+
+        <div className="flex gap-2">
+          <Button type="submit" disabled={submitting}>
+            {submitting && <Loader2 className="animate-spin" aria-hidden />}
+            {mode === "create"
+              ? submitting
+                ? "Adding…"
+                : "Add step"
+              : submitting
+                ? "Saving…"
+                : "Save step"}
+          </Button>
+          <Button variant="ghost" onClick={() => router.push(backHref)} disabled={submitting}>
+            Cancel
+          </Button>
+        </div>
+      </form>
+      {preview && (
+        <aside aria-label="Live preview" className="lg:sticky lg:top-6 lg:self-start">
+          <div className="rounded-xl border border-border bg-card p-4 shadow-card">
+            <div className="mb-3 flex items-baseline justify-between gap-2">
+              <h2 className="text-sm font-semibold">Live preview</h2>
+              <span className="text-xs text-muted-foreground">Updates as you type</span>
+            </div>
+            <div
+              role="radiogroup"
+              aria-label="Screen size"
+              className="mb-3 inline-flex rounded-lg border border-border bg-background p-0.5"
+            >
+              {(["desktop", "phone"] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  role="radio"
+                  aria-checked={device === d}
+                  onClick={() => setDevice(d)}
+                  className={cn(
+                    "rounded-md px-2.5 py-1 text-xs font-medium capitalize",
+                    device === d
+                      ? "bg-primary-soft text-primary"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+            <MockScreen
+              tip={preview.tip}
+              brand={preview.brand}
+              device={device}
+              height={device === "phone" ? 420 : 300}
+              address={`${preview.origin.replace(/^https?:\/\//, "")}${values.pageUrl || "/"}`}
+              index={Math.max(0, Math.min((values.stepOrder || 1) - 1, preview.total - 1))}
+              total={preview.total}
+              step={values}
+            />
+            <p className="mt-3 text-xs text-muted-foreground">
+              The tip appears next to the element matched by your CSS selector. Change how all tips
+              look in project Settings → Tour display.
             </p>
           </div>
-        </div>
-      </fieldset>
-
-      <div className="flex gap-2">
-        <Button type="submit" disabled={submitting}>
-          {submitting && <Loader2 className="animate-spin" aria-hidden />}
-          {mode === "create"
-            ? submitting
-              ? "Adding…"
-              : "Add step"
-            : submitting
-              ? "Saving…"
-              : "Save step"}
-        </Button>
-        <Button variant="ghost" onClick={() => router.push(backHref)} disabled={submitting}>
-          Cancel
-        </Button>
-      </div>
-    </form>
+        </aside>
+      )}
+    </div>
   );
 }

@@ -3,17 +3,22 @@ import { AlertTriangle, CircleAlert, Info } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const badgeVariants = cva("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", {
-  variants: {
-    variant: {
-      default: "bg-muted text-foreground",
-      success: "bg-success-soft text-success",
-      warning: "bg-warning-soft text-warning",
-      muted: "bg-muted text-muted-foreground",
+const badgeVariants = cva(
+  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
+  {
+    variants: {
+      variant: {
+        default: "bg-muted text-foreground ring-border",
+        success: "bg-success-soft text-success ring-success/20",
+        warning: "bg-warning-soft text-warning ring-warning/20",
+        muted: "bg-muted text-muted-foreground ring-border",
+        info: "bg-primary-soft text-primary ring-primary/20",
+        destructive: "bg-destructive-soft text-destructive-foreground ring-destructive/20",
+      },
     },
+    defaultVariants: { variant: "default" },
   },
-  defaultVariants: { variant: "default" },
-});
+);
 
 export function Badge({
   className,

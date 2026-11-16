@@ -174,3 +174,16 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+@keyframes wp-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+@keyframes wp-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}

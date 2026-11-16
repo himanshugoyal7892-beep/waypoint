@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { useToast } from "@/components/toast";
 import { useRouter } from "next/navigation";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { apiFetch } from "@/lib/api-client";
 
 export function DeleteProjectButton({ projectId, name }: { projectId: string; name: string }) {
   const router = useRouter();
+  const toast = useToast();
   return (
     <ConfirmAction
       title={`Delete “${name}”?`}
@@ -20,6 +22,7 @@ export function DeleteProjectButton({ projectId, name }: { projectId: string; na
       confirmLabel="Delete project"
       onConfirm={async () => {
         await apiFetch(`/api/admin/v1/projects/${projectId}`, { method: "DELETE" });
+        toast.success("Project deleted");
         router.push("/dashboard/projects");
         router.refresh();
       }}
@@ -42,6 +45,7 @@ export function DeleteTourButton({
   afterHref: string;
 }) {
   const router = useRouter();
+  const toast = useToast();
   return (
     <ConfirmAction
       title={`Delete “${name}”?`}
@@ -54,6 +58,7 @@ export function DeleteTourButton({
       confirmLabel="Delete tour"
       onConfirm={async () => {
         await apiFetch(`/api/admin/v1/tours/${tourId}`, { method: "DELETE" });
+        toast.success("Tour deleted");
         router.push(afterHref);
         router.refresh();
       }}
@@ -76,6 +81,7 @@ export function DeleteStepButton({
   afterHref: string;
 }) {
   const router = useRouter();
+  const toast = useToast();
   return (
     <ConfirmAction
       title="Delete this step?"
@@ -87,6 +93,7 @@ export function DeleteStepButton({
       confirmLabel="Delete step"
       onConfirm={async () => {
         await apiFetch(`/api/admin/v1/steps/${stepId}`, { method: "DELETE" });
+        toast.success("Step deleted");
         router.push(afterHref);
         router.refresh();
       }}
