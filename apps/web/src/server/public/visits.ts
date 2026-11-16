@@ -36,11 +36,25 @@ export async function recordVisit(
     ...nextVisit(prev, now),
     signedUpAt: input.signedUpAt ?? prev?.signedUpAt ?? null,
   };
+  const newVisit = !prev || facts.visitStartedAt.getTime() !== prev.visitStartedAt.getTime();
   await db.visitorProfile.upsert({
     where,
     create: { projectId: project.id, visitorKey, identified: !!input.userId, ...facts },
-    update: facts,
+    update: { ...facts, ...(newVisit ? { visits: { increment: 1 } } : {}) },
   });
+  if (newVisit) {
+    const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const counts = { visits: 1, newVisitors: prev ? 0 : 1, identifiedVisits: input.userId ? 1 : 0 };
+    await db.projectDailyStat.upsert({
+      where: { projectId_day: { projectId: project.id, day } },
+      create: { projectId: project.id, day, ...counts },
+      update: {
+        visits: { increment: counts.visits },
+        newVisitors: { increment: counts.newVisitors },
+        identifiedVisits: { increment: counts.identifiedVisits },
+      },
+    });
+  }
 
   const tours = await db.tour.findMany({
     where: { projectId: project.id, status: "PUBLISHED", triggerType: "AUTO" },

@@ -64,3 +64,18 @@ Values meaning "logged out" (empty, `null`, `undefined`, `0`, `guest`, …) are 
 - Dashboard forms were checked in a browser: saving, default values, and the error shown for a missing field name.
 - SDK size: 15.2 KB gzip (was 13.9 KB).
 - **Not verified:** which Redington field is filled after login. That needs a logged-in check by the user.
+
+## Project analytics page (16 Nov 2026)
+
+Sidebar → project → **Analytics** (`/dashboard/projects/{id}/analytics`, 7/30/90 days):
+
+- **Totals:** visits, visitors, new visitors, returning visitors, logged-in share.
+- **Visits per day:** a bar chart in UTC days.
+- **Tours table:** for each tour, who it's shown to, started, finished, skipped and completion rate, with a link to the step-by-step analytics.
+- **Recent visitors:** the 20 most recent, shown by a short code taken from the hashed key, with logged-in or anonymous, last and first seen, visits, and tours seen/finished. No names or ids, by design.
+
+Data comes from `VisitorProfile.visits` (+1 on each new visit) and `ProjectDailyStat` (visits, new visitors and logged-in visits per project per UTC day). Both are written by `POST /visits`.
+
+Visits are only counted when the snippet is on the site, directly or through Google Tag Manager (Preview mode included). The presenter's preview bookmark does not count visits.
+
+Verified locally: `verify.sh` green (shared 70, web 41, sdk 69 tests). Targeting browser check 18/18. The page was rendered with the resulting data: 6 visitors and 11 visits, matching the database.

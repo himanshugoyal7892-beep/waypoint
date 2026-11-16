@@ -150,6 +150,16 @@ function NavContent({
                           Tours
                         </NavLink>
                       </li>
+                      <li>
+                        <NavLink
+                          href={`${base}/analytics`}
+                          active={pathname.startsWith(`${base}/analytics`)}
+                          depth={1}
+                          onNavigate={onNavigate}
+                        >
+                          Analytics
+                        </NavLink>
+                      </li>
                     </ul>
                   )}
                 </li>

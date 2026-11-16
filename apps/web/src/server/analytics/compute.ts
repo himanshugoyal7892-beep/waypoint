@@ -86,3 +86,13 @@ export function computeTourAnalytics(
     steps: stepRows,
   };
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** UTC day keys from `since` to today, oldest first ("2026-11-16"). */
+export function dayKeys(days: number, now = new Date()): string[] {
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return Array.from({ length: days }, (_, i) =>
+    new Date(today - (days - 1 - i) * DAY_MS).toISOString().slice(0, 10),
+  );
+}

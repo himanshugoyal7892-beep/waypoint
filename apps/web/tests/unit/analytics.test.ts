@@ -50,3 +50,15 @@ describe("computeTourAnalytics", () => {
     expect(a.steps.every((s) => s.uniqueViewers === 0 && s.reachRate === 0)).toBe(true);
   });
 });
+
+describe("dayKeys", () => {
+  it("lists UTC days oldest first, ending today", async () => {
+    const { dayKeys } = await import("@/server/analytics/compute");
+    expect(dayKeys(3, new Date("2026-11-16T22:30:00Z"))).toEqual([
+      "2026-11-14",
+      "2026-11-15",
+      "2026-11-16",
+    ]);
+    expect(dayKeys(30)).toHaveLength(30);
+  });
+});

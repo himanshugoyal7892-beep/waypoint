@@ -98,6 +98,7 @@ model Project {
   events          AnalyticsEvent[]
   builderSessions BuilderSession[]
   visitors        VisitorProfile[]
+  dailyStats      ProjectDailyStat[]
 
   @@index([createdById])
   @@index([allowedOrigins], type: Gin)
@@ -214,8 +215,23 @@ model VisitorProfile {
   visitStartedAt  DateTime
   previousVisitAt DateTime?
   signedUpAt      DateTime? @db.Date
+  /// Number of visits (a new visit starts after 30 minutes of inactivity).
+  visits          Int       @default(1)
 
   @@unique([projectId, visitorKey])
+  @@index([projectId, lastSeenAt])
+}
+
+/// Visits per project per UTC day, for the project analytics page.
+model ProjectDailyStat {
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  day              DateTime @db.Date
+  visits           Int      @default(0)
+  newVisitors      Int      @default(0)
+  identifiedVisits Int      @default(0)
+
+  @@id([projectId, day])
 }
 
 /// How often a visitor has been shown a tour, and whether they finished or skipped it.
