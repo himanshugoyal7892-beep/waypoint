@@ -79,3 +79,36 @@ Data comes from `VisitorProfile.visits` (+1 on each new visit) and `ProjectDaily
 Visits are only counted when the snippet is on the site, directly or through Google Tag Manager (Preview mode included). The presenter's preview bookmark does not count visits.
 
 Verified locally: `verify.sh` green (shared 70, web 41, sdk 69 tests). Targeting browser check 18/18. The page was rendered with the resulting data: 6 visitors and 11 visits, matching the database.
+
+## More tour controls (16 Nov 2026)
+
+**Per tour** ("Who sees it and when"):
+
+| Control           | Values                                                     | Notes                                                                                                    |
+| ----------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Logged in or not  | Everyone / Logged-in users only / Logged-out visitors only | Uses the project's "Recognise logged-in users" setting. Decided by the server per visit.                 |
+| Device            | Any / Desktop only / Mobile only                           | Desktop means a viewport at least 1024 px wide (`DESKTOP_MIN_WIDTH`). Checked in the browser.            |
+| Priority          | 0–100                                                      | If several automatic tours could start on a page, the highest wins. Ties go to the tour published first. |
+| Wait for elements | 1–30 s (default 5)                                         | Also applies to tours started from a link.                                                               |
+
+**Per project** ("Tour display"):
+
+- **Automatic tours per visit:** limit 1–10, or empty for no limit. Counted in the session.
+- **Brand colour:** `#RRGGBB`, applied to the primary button, the focus ring and the highlight ring.
+
+**Caching:** the public tours list is now `s-maxage=20, stale-while-revalidate=40`, down from 60/300. If a linked tour isn't in the cached list, the SDK refetches it with a cache-busting parameter.
+
+**Verified:** `verify.sh` green. Targeting browser check **23/23**, which adds login state, brand colour and the per-visit counter. SDK browser check 15/15.
+
+## UAT demo tours
+
+- **Pre-login demo: Discover Redington (10 steps)**, `cmwjcosm90003kx08m92222gf`.
+  - Settings: start page `/en-sa`, automatic, logged-out visitors only, desktop, priority 10, waits 10 s, shown once.
+  - Steps: search, All Categories, country selector, hero banner, "why Redington" stats, category carousel, featured products, "What are you looking for" grid, newsletter, Sign Up.
+  - Verified on UAT on 16 Nov in real Chrome at 1440 px: all 10 steps, both from its link and automatically for a new logged-out visitor (it beats the other `/en-sa` tours on priority). `tour_completed` was recorded.
+  - Demo link: https://uat-interstellar.redingtonmea.com/en-sa?tour_start=cmwjcosm90003kx08m92222gf
+- **UAT: Welcome tour (6 steps)**, `cmwj9qa2v0010jp07hna08k0v`. Verified on 16 Nov.
+- **Post-login tour:** pending. Needs the logged-in page structure (data-testids) from a logged-in session.
+- **UAT quirks:**
+  - The CookieYes banner appears bottom-left for new visitors.
+  - Below 1024 px the site switches to a mobile header, so the desktop header steps don't apply there.
