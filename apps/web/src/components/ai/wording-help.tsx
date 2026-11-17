@@ -28,23 +28,27 @@ export function WordingHelp({
   title: string;
   description: string;
   pageUrl?: string;
-  onApply: (r: AiWordingResult) => void;
+  onApply: (r: AiWordingResult, action: AiWordingAction) => void;
 }) {
   const [busy, setBusy] = React.useState<AiWordingAction | null>(null);
   const [result, setResult] = React.useState<AiWordingResult | null>(null);
+  const [lastAction, setLastAction] = React.useState<AiWordingAction>("SHORTEN");
   const [error, setError] = React.useState<string | null>(null);
+  const [demo, setDemo] = React.useState(false);
   const empty = !title.trim() && !description.trim();
 
   async function run(action: AiWordingAction) {
     setBusy(action);
+    setLastAction(action);
     setError(null);
     setResult(null);
     try {
-      const { result } = await apiFetch<{ result: AiWordingResult }>("/api/admin/v1/ai/wording", {
-        method: "POST",
-        body: { action, title, description, pageUrl },
-      });
-      setResult(result);
+      const res = await apiFetch<{ result: AiWordingResult; demo?: boolean }>(
+        "/api/admin/v1/ai/wording",
+        { method: "POST", body: { action, title, description, pageUrl } },
+      );
+      setDemo(Boolean(res.demo));
+      setResult(res.result);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : "Couldn't reach the AI. Try again.");
     } finally {
@@ -86,7 +90,10 @@ export function WordingHelp({
         )}
         {result && (
           <div className="mt-3 rounded-md border border-border bg-card p-3 shadow-xs motion-safe:animate-[wp-pop_.15s_ease-out]">
-            <p className="text-xs font-medium text-muted-foreground">Suggestion</p>
+            <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              Suggestion
+              {demo && <DemoTag />}
+            </p>
             {result.title && (
               <p dir="auto" className="mt-1 text-sm font-semibold">
                 {result.title}
@@ -105,7 +112,7 @@ export function WordingHelp({
                 type="button"
                 size="sm"
                 onClick={() => {
-                  onApply(result);
+                  onApply(result, lastAction);
                   setResult(null);
                 }}
               >
@@ -119,5 +126,17 @@ export function WordingHelp({
         )}
       </div>
     </div>
+  );
+}
+
+/** Marks answers from the built-in demo rules (no AI key set). */
+export function DemoTag() {
+  return (
+    <span
+      title="No AI key is set, so this answer comes from Waypoint's built-in demo rules."
+      className="rounded-full bg-muted px-1.5 py-px text-[10px] font-medium text-muted-foreground"
+    >
+      Demo mode
+    </span>
   );
 }

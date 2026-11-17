@@ -187,3 +187,52 @@
     transform: translateY(12px);
   }
 }
+
+/* "Draft with AI" illustration: a scan line passes, then the picked elements light up. */
+@keyframes wp-ai-scan {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(150px);
+    opacity: 1;
+  }
+  70%,
+  100% {
+    transform: translateY(150px);
+    opacity: 0;
+  }
+}
+@keyframes wp-ai-pin {
+  0%,
+  35% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  45%,
+  90% {
+    box-shadow: 0 0 0 2px var(--color-primary);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.wp-ai-scan {
+  animation: wp-ai-scan 3.6s ease-in-out infinite;
+}
+.wp-ai-pin {
+  animation: wp-ai-pin 3.6s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wp-ai-scan {
+    display: none;
+  }
+  .wp-ai-pin {
+    animation: none;
+    box-shadow: 0 0 0 2px var(--color-primary);
+  }
+}

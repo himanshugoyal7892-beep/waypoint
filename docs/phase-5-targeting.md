@@ -182,3 +182,16 @@ Turned on by `ANTHROPIC_API_KEY` (server only; Vercel → Settings → Environme
 - `tests/browser/ai-check.mjs`: 11/11 end to end against a fake Claude server (`AI_API_URL`).
 - The scanner was run on the Redington UAT and production home pages: about 90–106 elements in under 70 ms, mostly `data-testid` selectors.
 - Not verified: answers from the real Claude API, which need the key.
+
+## AI demo mode and "Draft with AI" on New tour (17 Nov 2026)
+
+- **Demo mode:** with no `ANTHROPIC_API_KEY`, the AI features answer from built-in rules (`server/ai/demo.ts`). There is no network call and the result is the same every time. Answers carry `demo: true` and show a small "Demo mode" tag.
+  - **Draft:** recognises common page parts (search, categories, login, sign up, track orders, quote, featured, hero, country, cart, help, account and others) and picks the most specific element for each. The goal raises matching parts. Gaps are filled with headings and buttons.
+  - **Wording:** Shorten, Clearer (typo fixes and plain words) and Friendlier are rules. Arabic and English use a hand-written phrase book covering the Redington demo tours and the draft templates; other text gets a clear message. Applying Arabic also switches Next/Back to التالي/السابق.
+  - **Review:** names the drop-off step (or the wordiest step) and offers a shorter or clearer rewrite.
+  - Adding a key switches to real Claude answers automatically.
+- **New tour page:** two choices, "Draft with AI" (default) and "Start from scratch".
+  - "Draft with AI" asks for the page, an optional goal (with quick ideas), length and start mode. It creates an "AI draft" tour, mints a builder pass and opens the site in a new tab with `ai=1&goal=…&steps=…` in the fragment.
+  - The builder drafts by itself, then renames the tour to the draft's name when the steps are added.
+  - The tour page refreshes when you come back to the tab.
+- **Verified:** `tests/browser/ai-demo-check.mjs` passed 14/14. Demo unit tests: 5. On the real Redington scans, the demo draft picks search, categories, login, sign up, track orders and quote with `data-testid` selectors.

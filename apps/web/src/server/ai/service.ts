@@ -3,11 +3,17 @@ import type { AiDraftInput, AiWordingInput } from "@waypoint/shared";
 import { db } from "../db";
 import { computeTourHealth } from "../insights/health";
 import { ownTour } from "../ownership";
-import { runTool } from "./claude";
+import { aiConfigured, runTool } from "./claude";
+import { demoDraft, demoReview, demoReword } from "./demo";
 import { draftTour, reviewTour, rewordStep } from "./tasks";
 
-export const aiReword = (input: AiWordingInput) => rewordStep(input, runTool);
-export const aiDraft = (input: AiDraftInput) => draftTour(input, runTool);
+/** No key set: answers come from the built-in demo rules instead of Claude. */
+export const aiDemoMode = () => !aiConfigured();
+
+export const aiReword = async (input: AiWordingInput) =>
+  aiDemoMode() ? demoReword(input) : rewordStep(input, runTool);
+export const aiDraft = async (input: AiDraftInput) =>
+  aiDemoMode() ? demoDraft(input) : draftTour(input, runTool);
 
 /** Reviews a tour with its last 30 days of step views: explains the biggest drop-off. */
 export async function aiReview(userId: string, tourId: string) {
@@ -53,8 +59,13 @@ export async function aiReview(userId: string, tourId: string) {
     viewedByStep,
     missingByStep: {},
   });
-  return reviewTour(
-    { tourName: tour.name, steps: tour.steps, started, completed, viewedByStep, dropOff },
-    runTool,
-  );
+  const input = {
+    tourName: tour.name,
+    steps: tour.steps,
+    started,
+    completed,
+    viewedByStep,
+    dropOff,
+  };
+  return aiDemoMode() ? demoReview(input) : reviewTour(input, runTool);
 }

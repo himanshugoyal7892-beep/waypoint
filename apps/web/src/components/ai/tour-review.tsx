@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
+import { DemoTag } from "./wording-help";
 import { ApiClientError, apiFetch } from "@/lib/api-client";
 
 interface StepText {
@@ -34,6 +35,7 @@ export function TourReview({
   const [busy, setBusy] = React.useState(false);
   const [review, setReview] = React.useState<AiReviewResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [demo, setDemo] = React.useState(false);
   const [applied, setApplied] = React.useState<Set<string>>(new Set());
   const [applying, setApplying] = React.useState<string | null>(null);
 
@@ -41,11 +43,12 @@ export function TourReview({
     setBusy(true);
     setError(null);
     try {
-      const { result } = await apiFetch<{ result: AiReviewResult }>(
+      const res = await apiFetch<{ result: AiReviewResult; demo?: boolean }>(
         `/api/admin/v1/tours/${tourId}/ai-review`,
         { method: "POST" },
       );
-      setReview(result);
+      setDemo(Boolean(res.demo));
+      setReview(res.result);
       setApplied(new Set());
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : "Couldn't reach the AI. Try again.");
@@ -103,6 +106,7 @@ export function TourReview({
             <span className="mb-1 flex items-center gap-1.5 text-xs font-medium text-primary">
               <Sparkles className="size-3.5" aria-hidden />
               {review.basedOn === "dropoff" ? "Why visitors leave" : "Text review"}
+              {demo && <DemoTag />}
             </span>
             {review.summary}
           </p>

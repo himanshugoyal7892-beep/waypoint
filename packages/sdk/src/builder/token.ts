@@ -38,6 +38,33 @@ export function takePassFromUrl(): string | null {
   return extractPass(pass);
 }
 
+export interface AiRequest {
+  goal: string;
+  steps: number;
+}
+
+/**
+ * "Draft with AI" launch from the dashboard adds `ai=1&goal=…&steps=…` to the fragment. Reads
+ * and removes them, so the builder can start drafting straight away.
+ */
+export function takeAiRequestFromUrl(): AiRequest | null {
+  if (!location.hash) return null;
+  const params = new URLSearchParams(location.hash.slice(1));
+  if (params.get("ai") !== "1") return null;
+  const req = {
+    goal: (params.get("goal") ?? "").slice(0, 300),
+    steps: Math.min(10, Math.max(3, Number(params.get("steps")) || 6)),
+  };
+  for (const k of ["ai", "goal", "steps"]) params.delete(k);
+  const rest = params.toString();
+  history.replaceState(
+    history.state,
+    "",
+    `${location.pathname}${location.search}${rest ? `#${rest}` : ""}`,
+  );
+  return req;
+}
+
 export function storedToken(session: KeyValueStore): StoredBuilderToken | null {
   const t = readJson<StoredBuilderToken>(session, "builder");
   if (!t || new Date(t.expiresAt).getTime() <= Date.now()) {

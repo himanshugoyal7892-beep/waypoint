@@ -20,7 +20,13 @@ import { Picker } from "./picker";
 import { scanPage } from "./scan";
 import { generateSelector, matchSummary, type SelectorQuality } from "./selector";
 import { BUILDER_STYLES } from "./styles";
-import { extractPass, redeemAndStore, storedToken, takePassFromUrl } from "./token";
+import {
+  extractPass,
+  redeemAndStore,
+  storedToken,
+  takeAiRequestFromUrl,
+  takePassFromUrl,
+} from "./token";
 
 type View = "loading" | "locked" | "home" | "newTour" | "step" | "picking" | "preview" | "ai";
 
@@ -89,6 +95,8 @@ export class BuilderApp {
   private aiGoal = "";
   private aiCount = 6;
   private aiBusy = false;
+  private aiDemo = false;
+  private aiName = "";
   private readonly reposition = () => this.form && this.picker.outline(this.form.element);
   private readonly release: () => void;
 
@@ -160,6 +168,7 @@ export class BuilderApp {
 
   async start() {
     this.render();
+    const aiRequest = takeAiRequestFromUrl();
     try {
       const fromUrl = takePassFromUrl();
       if (fromUrl) await redeemAndStore(this.apiBase, fromUrl, this.session);
@@ -171,6 +180,17 @@ export class BuilderApp {
     this.client = new BuilderClient(this.apiBase, token.token);
     this.readOnly = token.mode !== "BUILD";
     await this.loadSession(token.tourId ?? this.preferTourId);
+    if (aiRequest && this.tour && !this.readOnly) {
+      this.aiGoal = aiRequest.goal;
+      this.aiCount = aiRequest.steps;
+      this.go("ai");
+      // Give client-rendered pages a moment to finish drawing before the scan.
+      this.aiBusy = true;
+      this.render();
+      await new Promise((r) => setTimeout(r, 2500));
+      this.aiBusy = false;
+      await this.runDraft();
+    }
   }
 
   destroy() {
@@ -556,7 +576,21 @@ export class BuilderApp {
       );
     });
     return [
-      h("strong", {}, "Proposed steps"),
+      h(
+        "div",
+        { className: "row" },
+        h("strong", { className: "grow" }, "Proposed steps"),
+        this.aiDemo
+          ? h(
+              "span",
+              {
+                className: "badge",
+                title: "No AI key is set: built-in demo rules wrote this draft.",
+              },
+              "Demo mode",
+            )
+          : null,
+      ),
       h(
         "p",
         { className: "muted" },
@@ -607,7 +641,7 @@ export class BuilderApp {
     this.draft = null;
     this.render();
     try {
-      const { result } = await this.client!.aiDraft({
+      const { result, demo } = await this.client!.aiDraft({
         tourId: t.id,
         pageUrl: currentPath(),
         pageTitle: document.title.slice(0, 200),
@@ -615,6 +649,8 @@ export class BuilderApp {
         stepCount: this.aiCount,
         elements,
       });
+      this.aiDemo = Boolean(demo);
+      this.aiName = result.name;
       this.draft = result.steps.map((s) => {
         let el: Element | null = null;
         try {
@@ -653,6 +689,12 @@ export class BuilderApp {
         added++;
       }
       this.draft = null;
+      // A tour created by the dashboard's "Draft with AI" gets the AI's name.
+      if (/^AI draft\b/.test(t.name) && this.aiName) {
+        await this.client!.renameTour(t.id, this.aiName).catch(() => undefined);
+        const listed = this.tours.find((x) => x.id === t.id);
+        if (listed) listed.name = this.aiName;
+      }
       await this.loadTour(t.id, false);
       this.go("home");
       this.say(`Added ${added} steps. Preview them, or fine-tune the wording in the dashboard.`);

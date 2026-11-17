@@ -1,24 +1,25 @@
 import type { Metadata } from "next";
-import { TourForm } from "@/components/forms/tour-form";
+import { NewTourChooser } from "@/components/ai/ai-draft-start";
 import { PageHeader } from "@/components/layout";
-import { Card, CardContent } from "@/components/ui/card";
+import { loadOr404 } from "@/lib/page-data";
+import { siteOrigin } from "@/lib/tip";
+import { requirePageUser } from "@/server/auth";
+import { getProject } from "@/server/services/projects";
 
 export const metadata: Metadata = { title: "New tour" };
 
 export default async function NewTourPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
+  const user = await requirePageUser();
+  const project = await loadOr404(() => getProject(user.id, projectId));
   return (
-    <div className="max-w-2xl">
+    <div>
       <PageHeader
         title="New tour"
-        description="Name the tour and choose where it starts. You'll add steps next."
+        description="Let AI draft it from a page on your site, or build it yourself."
         breadcrumbs={[{ href: `/dashboard/projects/${projectId}/tours`, label: "Tours" }]}
       />
-      <Card>
-        <CardContent className="pt-5">
-          <TourForm mode="create" projectId={projectId} />
-        </CardContent>
-      </Card>
+      <NewTourChooser projectId={projectId} siteOrigin={siteOrigin(project.allowedOrigins)} />
     </div>
   );
 }

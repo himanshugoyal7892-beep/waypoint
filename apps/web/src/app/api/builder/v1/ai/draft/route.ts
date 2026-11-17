@@ -1,5 +1,5 @@
 import { LIMITS, aiDraftSchema } from "@waypoint/shared";
-import { aiDraft } from "@/server/ai/service";
+import { aiDemoMode, aiDraft } from "@/server/ai/service";
 import { readJsonBody } from "@/server/http/body";
 import { assertTourInSession, builderOptions, builderRoute } from "@/server/http/builder-route";
 import { json } from "@/server/http/respond";
@@ -13,7 +13,7 @@ export const POST = builderRoute(async (req, { session }) => {
   await enforceRateLimit("ai", req, `user:${session.createdById}`);
   const input = await readJsonBody(req, aiDraftSchema, LIMITS.adminBodyBytes);
   await assertTourInSession(session, input.tourId);
-  return json({ result: await aiDraft(input) });
+  return json({ result: await aiDraft(input), demo: aiDemoMode() });
 });
 
 export const OPTIONS = builderOptions;

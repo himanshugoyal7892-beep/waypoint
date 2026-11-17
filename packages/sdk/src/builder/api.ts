@@ -127,6 +127,9 @@ export class BuilderClient {
       expiresAt: string;
     }>("GET", "/session");
   }
+  renameTour(id: string, name: string) {
+    return this.call<{ tour: BuilderTour }>("PATCH", `/tours/${encodeURIComponent(id)}`, { name });
+  }
   getTour(id: string) {
     return this.call<{ tour: BuilderTour; publishIssues: PublishIssue[] }>(
       "GET",
@@ -164,7 +167,7 @@ export class BuilderClient {
     stepCount: number;
     elements: ScannedElement[];
   }) {
-    return this.call<{ result: AiDraft }>("POST", "/ai/draft", input);
+    return this.call<{ result: AiDraft; demo?: boolean }>("POST", "/ai/draft", input);
   }
   setPublished(tourId: string, publish: boolean) {
     return this.call<{ tour: BuilderTour }>(

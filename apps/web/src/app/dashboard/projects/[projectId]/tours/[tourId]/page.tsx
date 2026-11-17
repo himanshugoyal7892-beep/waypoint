@@ -1,5 +1,6 @@
 import { BarChart3, Link2, ListOrdered, Plus, Sparkles, Users } from "lucide-react";
 import { TourReview } from "@/components/ai/tour-review";
+import { RefreshOnFocus } from "@/components/refresh-on-focus";
 import { HealthBadge, HealthPanel } from "@/components/insights";
 import { getProjectInsights } from "@/server/insights/service";
 import type { Metadata } from "next";
@@ -87,6 +88,7 @@ export default async function TourPage({
         }
       />
 
+      <RefreshOnFocus />
       <TabNav
         label="Tour sections"
         current={tab}
