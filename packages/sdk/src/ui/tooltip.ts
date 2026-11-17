@@ -137,6 +137,7 @@ export class TourUI {
     const header = el("div", "header");
     const title = el("h2", "title", step.title || `Step ${index + 1}`);
     title.id = `${id}-title`;
+    title.dir = "auto"; // Arabic copy reads right-to-left
     tip.setAttribute("aria-labelledby", title.id);
     const close = el("button", "close", "×");
     close.type = "button";
@@ -148,6 +149,7 @@ export class TourUI {
     if (step.description) {
       const body = el("p", "body", step.description);
       body.id = `${id}-desc`;
+      body.dir = "auto";
       tip.setAttribute("aria-describedby", body.id);
       tip.append(body);
     }

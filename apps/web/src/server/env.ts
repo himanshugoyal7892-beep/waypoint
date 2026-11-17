@@ -18,6 +18,11 @@ const schema = z
     RATE_LIMIT_DRIVER: z.enum(["memory", "upstash"]).default("memory"),
     UPSTASH_REDIS_REST_URL: z.string().url().optional().or(z.literal("")),
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+    /** Claude API key for the AI features. Without it the AI buttons explain how to turn them on. */
+    ANTHROPIC_API_KEY: z.string().optional(),
+    AI_MODEL: z.string().default("claude-sonnet-5-5"),
+    /** Only for local end-to-end tests with a fake AI server. */
+    AI_API_URL: z.string().url().default("https://api.anthropic.com/v1/messages"),
     BUILDER_PASS_TTL_MINUTES: z.coerce.number().int().min(5).max(120).default(120),
     /** Demo/staging escape hatch: allow the per-instance memory limiter in production. */
     ALLOW_MEMORY_RATE_LIMIT_IN_PRODUCTION: z.enum(["true", "false"]).default("false"),

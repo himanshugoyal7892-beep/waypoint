@@ -13,6 +13,8 @@ export const POLICIES = {
   /** Coarse per-IP cap applied before the body is parsed. */
   public_ip: { limit: 240, windowMs: 60_000 },
   builder: { limit: 300, windowMs: 60_000 },
+  /** AI calls cost money: per signed-in user (or builder pass). */
+  ai: { limit: 20, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitPolicy>;
 
 export type PolicyName = keyof typeof POLICIES;

@@ -85,6 +85,8 @@ See [`.env.example`](.env.example). Only `NEXT_PUBLIC_*` variables reach the bro
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | server   | Distributed rate limiting                                                               |
 | `ALLOW_MEMORY_RATE_LIMIT_IN_PRODUCTION`              | server   | `true` lets a demo/staging deployment run without Upstash (weaker, per-instance limits) |
 | `BUILDER_PASS_TTL_MINUTES`                           | server   | Builder pass lifetime (5–120, default 120)                                              |
+| `ANTHROPIC_API_KEY`                                  | server   | Turns on the AI features (draft a tour, wording help, explain drop-offs)                |
+| `AI_MODEL`                                           | server   | Claude model for the AI features (default `claude-sonnet-5-5`)                          |
 | `SEED_CLERK_USER_ID`, `SEED_USER_EMAIL`              | server   | Seed owner                                                                              |
 
 ## API overview

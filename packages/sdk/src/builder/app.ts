@@ -17,11 +17,21 @@ import {
 } from "./api";
 import { h } from "./dom";
 import { Picker } from "./picker";
+import { scanPage } from "./scan";
 import { generateSelector, matchSummary, type SelectorQuality } from "./selector";
 import { BUILDER_STYLES } from "./styles";
 import { extractPass, redeemAndStore, storedToken, takePassFromUrl } from "./token";
 
-type View = "loading" | "locked" | "home" | "newTour" | "step" | "picking" | "preview";
+type View = "loading" | "locked" | "home" | "newTour" | "step" | "picking" | "preview" | "ai";
+
+interface DraftStep {
+  keep: boolean;
+  el: Element | null;
+  cssSelector: string;
+  title: string;
+  description: string;
+  placement: StepInput["placement"];
+}
 
 interface StepForm {
   stepId: string | null;
@@ -75,6 +85,10 @@ export class BuilderApp {
   private form: StepForm | null = null;
   private minimized = false;
   private stopPreview: (() => void) | null = null;
+  private draft: DraftStep[] | null = null;
+  private aiGoal = "";
+  private aiCount = 6;
+  private aiBusy = false;
   private readonly reposition = () => this.form && this.picker.outline(this.form.element);
   private readonly release: () => void;
 
@@ -272,7 +286,9 @@ export class BuilderApp {
             ? this.renderNewTour()
             : this.view === "step" || this.view === "picking"
               ? this.renderStepForm()
-              : this.renderHome();
+              : this.view === "ai"
+                ? this.renderAi()
+                : this.renderHome();
     this.body.replaceChildren(...content, this.status);
   }
 
@@ -419,8 +435,231 @@ export class BuilderApp {
           { className: "btn primary", type: "button", onclick: () => this.beginPick(null) },
           "+ Add step: select an element",
         ),
+        h(
+          "button",
+          {
+            className: "btn ai",
+            type: "button",
+            onclick: () => {
+              this.draft = null;
+              this.go("ai");
+            },
+          },
+          "✨ Draft steps with AI",
+        ),
       );
     return nodes;
+  }
+
+  // ---------------------------------------------------------------- AI draft
+
+  private renderAi(): Node[] {
+    const t = this.tour!;
+    if (this.aiBusy)
+      return [
+        h("strong", {}, "Draft steps with AI"),
+        h("div", { className: "note" }, "Reading this page and writing a draft… about 15 seconds."),
+      ];
+    if (!this.draft) {
+      const goal = h("textarea", {
+        id: "aigoal",
+        placeholder: "Optional, e.g. help new partners find products and request a quote",
+        maxlength: "300",
+        value: this.aiGoal,
+        oninput: (e: Event) => (this.aiGoal = (e.target as HTMLTextAreaElement).value),
+      });
+      const count = h(
+        "select",
+        {
+          id: "aicount",
+          onchange: (e: Event) => (this.aiCount = Number((e.target as HTMLSelectElement).value)),
+        },
+        ...[4, 5, 6, 7, 8, 10].map((n) =>
+          h(
+            "option",
+            { value: String(n), ...(n === this.aiCount ? { selected: true } : {}) },
+            `${n} steps`,
+          ),
+        ),
+      );
+      return [
+        h("strong", {}, "Draft steps with AI"),
+        h(
+          "p",
+          { className: "muted" },
+          `Waypoint reads the buttons, links and headings on this page (never what anyone typed) and proposes steps for “${t.name}”. You choose which to keep.`,
+        ),
+        h("label", { for: "aigoal" }, "What should the tour help visitors do?", goal),
+        h("label", { for: "aicount" }, "Length", count),
+        h(
+          "div",
+          { className: "row" },
+          h(
+            "button",
+            { className: "btn primary", type: "button", onclick: () => void this.runDraft() },
+            "Scan this page and draft",
+          ),
+          h(
+            "button",
+            { className: "btn", type: "button", onclick: () => this.go("home") },
+            "Cancel",
+          ),
+        ),
+      ];
+    }
+
+    const kept = this.draft.filter((d) => d.keep).length;
+    const list = h("ol", { className: "steps", "aria-label": "Proposed steps" });
+    this.draft.forEach((d, i) => {
+      const title = h("input", {
+        "aria-label": `Step ${i + 1} title`,
+        value: d.title,
+        maxlength: "120",
+        dir: "auto",
+        oninput: (e: Event) => (d.title = (e.target as HTMLInputElement).value),
+      });
+      const desc = h("textarea", {
+        "aria-label": `Step ${i + 1} description`,
+        value: d.description,
+        maxlength: "1000",
+        dir: "auto",
+        oninput: (e: Event) => (d.description = (e.target as HTMLTextAreaElement).value),
+      });
+      desc.value = d.description;
+      const show = () => d.el && this.picker.outline(d.el, `Step ${i + 1}`);
+      list.append(
+        h(
+          "li",
+          {
+            className: `draft ${d.keep ? "" : "off"}`,
+            onmouseenter: show,
+            onfocusin: show,
+            onmouseleave: () => this.picker.outline(null),
+          },
+          h(
+            "label",
+            { className: "check" },
+            h("input", {
+              type: "checkbox",
+              checked: d.keep,
+              onchange: (e: Event) => {
+                d.keep = (e.target as HTMLInputElement).checked;
+                this.render();
+              },
+            }),
+            `Step ${i + 1}`,
+            d.el ? "" : h("span", { className: "badge fragile" }, "not on screen"),
+          ),
+          title,
+          desc,
+        ),
+      );
+    });
+    return [
+      h("strong", {}, "Proposed steps"),
+      h(
+        "p",
+        { className: "muted" },
+        "Hover a step to see its element. Edit or untick before adding.",
+      ),
+      list,
+      h(
+        "div",
+        { className: "row" },
+        h(
+          "button",
+          {
+            className: "btn primary",
+            type: "button",
+            disabled: kept === 0,
+            onclick: () => void this.addDraft(),
+          },
+          `Add ${kept} step${kept === 1 ? "" : "s"}`,
+        ),
+        h(
+          "button",
+          { className: "btn", type: "button", onclick: () => void this.runDraft() },
+          "Try again",
+        ),
+        h(
+          "button",
+          {
+            className: "btn",
+            type: "button",
+            onclick: () => {
+              this.draft = null;
+              this.picker.outline(null);
+              this.go("home");
+            },
+          },
+          "Cancel",
+        ),
+      ),
+    ];
+  }
+
+  private async runDraft() {
+    const t = this.tour!;
+    const elements = scanPage((el) => this.host.contains(el) || el === this.host);
+    if (elements.length < 3)
+      return this.say("Not enough on this page to draft from. Scroll or open a fuller page.", true);
+    this.aiBusy = true;
+    this.draft = null;
+    this.render();
+    try {
+      const { result } = await this.client!.aiDraft({
+        tourId: t.id,
+        pageUrl: currentPath(),
+        pageTitle: document.title.slice(0, 200),
+        goal: this.aiGoal.trim(),
+        stepCount: this.aiCount,
+        elements,
+      });
+      this.draft = result.steps.map((s) => {
+        let el: Element | null = null;
+        try {
+          el = document.querySelector(s.cssSelector);
+        } catch {
+          el = null;
+        }
+        return { ...s, keep: true, el };
+      });
+      this.say(`Drafted ${this.draft.length} steps from ${elements.length} elements.`);
+    } catch (err) {
+      this.say(this.errorText(err), true);
+    } finally {
+      this.aiBusy = false;
+      this.render();
+    }
+  }
+
+  private async addDraft() {
+    const t = this.tour!;
+    const keep = (this.draft ?? []).filter((d) => d.keep);
+    this.picker.outline(null);
+    let added = 0;
+    try {
+      for (const d of keep) {
+        await this.client!.createStep(t.id, {
+          pageUrl: currentPath(),
+          cssSelector: d.cssSelector,
+          title: d.title.trim(),
+          description: d.description.trim(),
+          placement: d.placement,
+          nextButtonLabel: "Next",
+          backButtonLabel: "Back",
+          allowSkip: true,
+        });
+        added++;
+      }
+      this.draft = null;
+      await this.loadTour(t.id, false);
+      this.go("home");
+      this.say(`Added ${added} steps. Preview them, or fine-tune the wording in the dashboard.`);
+    } catch (err) {
+      if (added) await this.loadTour(t.id, false).catch(() => undefined);
+      this.say(`${added ? `Added ${added}, then: ` : ""}${this.errorText(err)}`, true);
+    }
   }
 
   private renderStepRow(s: BuilderStep, i: number, total: number) {

@@ -33,6 +33,8 @@ export type ApiErrorCode =
   | "UNSUPPORTED_MEDIA_TYPE"
   | "RATE_LIMITED"
   | "BUILDER_PASS_INVALID"
+  | "AI_NOT_CONFIGURED"
+  | "AI_FAILED"
   | "INTERNAL_ERROR";
 
 export interface ApiErrorDetail {

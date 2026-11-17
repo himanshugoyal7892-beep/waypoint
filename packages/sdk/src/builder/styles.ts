@@ -58,6 +58,12 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #6366f1; outline-
 .status { min-height: 16px; color: #475569; font-size: 12px; }
 .pick-box { position: fixed; z-index: ${Z_INDEX + 5}; pointer-events: none; border: 2px solid #6366f1; background: rgba(99,102,241,.12); border-radius: 4px; }
 .pick-label { position: absolute; left: -2px; top: -22px; background: #6366f1; color: #fff; font: 600 11px/1 ui-monospace, Menlo, monospace; padding: 4px 6px; border-radius: 4px 4px 4px 0; white-space: nowrap; }
+.btn.ai { background: linear-gradient(135deg, #eef2ff, #f5f3ff); border-color: #c7d2fe; color: #3730a3; }
+.btn.ai:hover { background: #e0e7ff; }
+.draft { display: grid; gap: 6px; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; }
+.draft:hover, .draft:focus-within { border-color: #a5b4fc; background: #f8faff; }
+.draft.off { opacity: .55; }
+.draft textarea { min-height: 52px; }
 .banner { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: ${Z_INDEX + 11}; background: #1e2a78; color: #fff; border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(15,23,42,.3); display: flex; gap: 10px; align-items: center; }
 .banner .btn { padding: 4px 10px; font-size: 12px; }
 `;

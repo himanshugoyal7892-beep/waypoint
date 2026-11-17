@@ -12,6 +12,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { MockScreen } from "@/components/tip-preview";
+import { WordingHelp } from "@/components/ai/wording-help";
 import { cn } from "@/lib/utils";
 import type { PublicTipTheme } from "@waypoint/shared/api-types";
 import { apiFetch } from "@/lib/api-client";
@@ -170,9 +171,22 @@ export function StepForm({
           <p className="-mt-2 text-xs text-muted-foreground">
             Plain text only. A title or a description is required.
           </p>
+          <WordingHelp
+            title={values.title}
+            description={values.description}
+            pageUrl={values.pageUrl}
+            onApply={(r) =>
+              setValues((v) => ({
+                ...v,
+                title: r.title || v.title,
+                description: r.description || v.description,
+              }))
+            }
+          />
           <Field id="step-title" label="Title" error={err("title")}>
             <Input
               {...controlProps("step-title", err("title"))}
+              dir="auto"
               value={values.title}
               onChange={set("title")}
               maxLength={120}
@@ -181,6 +195,7 @@ export function StepForm({
           <Field id="step-description" label="Description" error={err("description")}>
             <Textarea
               {...controlProps("step-description", err("description"))}
+              dir="auto"
               value={values.description}
               onChange={set("description")}
               maxLength={1000}

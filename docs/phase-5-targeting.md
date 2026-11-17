@@ -160,3 +160,25 @@ The public tours API returns these as `settings.tip`; the SDK whitelists the val
 - **Step editor:** live preview beside the form (desktop or phone) that updates as you type, using the project's tip look.
 - **Tour page:** Preview card that plays the whole tour on a small desktop or phone screen. The tip's own buttons work (Back, Next, Skip, Finish), as do the controls below it.
 - Shared drawing in `components/tip-preview.tsx` (`TipCard`, `MockScreen`, `TourPlayer`) follows the real script's button rules.
+
+## AI features (17 Nov 2026)
+
+Turned on by `ANTHROPIC_API_KEY` (server only; Vercel → Settings → Environment Variables). Model from `AI_MODEL` (default `claude-sonnet-5-5`). Without a key, each AI button shows how to switch it on.
+
+- **Draft a tour from a page** (visual builder → "✨ Draft steps with AI"): the builder scans visible buttons, links, headings, fields and `data-testid` elements on the current page (works on logged-in pages too), sends up to 120 of them with their selectors, and the AI proposes 4–10 steps. The user ticks, edits and adds them. Nothing is saved until "Add".
+- **Wording help** (step editor): Shorten, Clearer, Friendlier, Arabic, English. The suggestion is shown first; "Use this" fills the fields. Tips now set `dir="auto"`, so Arabic reads right to left.
+- **Improve with AI** (tour page): with enough data, explains why visitors leave at the biggest drop-off and rewrites that step; otherwise reviews the text. Each rewrite applies to its step in one click.
+
+**Safety and privacy**
+
+- The key stays on the server.
+- The scan never reads form values; only labels and placeholders. No visitor data is sent: only page labels, selectors and tour text.
+- Page and tour text is passed to the model as tagged data, with instructions inside it ignored. Answers are validated: draft steps must point at scanned elements, and rewrites must match real steps. Lengths are clipped.
+- Rate limit: 20 AI requests per minute per user.
+
+**Verified locally**
+
+- Unit tests: 11 (tasks with a fake model, plus the API client with a mocked network).
+- `tests/browser/ai-check.mjs`: 11/11 end to end against a fake Claude server (`AI_API_URL`).
+- The scanner was run on the Redington UAT and production home pages: about 90–106 elements in under 70 ms, mostly `data-testid` selectors.
+- Not verified: answers from the real Claude API, which need the key.

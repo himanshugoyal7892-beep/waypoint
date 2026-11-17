@@ -1,6 +1,7 @@
 import type { BuilderRedeemResponse, PublicTour } from "@waypoint/shared/api-types";
 import type { Placement, TourStatus } from "@waypoint/shared/enums";
 import type { PublishIssue } from "@waypoint/shared/publish-rules";
+import type { ScannedElement } from "./scan";
 
 export interface BuilderTourSummary {
   id: string;
@@ -41,6 +42,11 @@ export interface StepInput {
   nextButtonLabel: string;
   backButtonLabel: string;
   allowSkip: boolean;
+}
+
+export interface AiDraft {
+  name: string;
+  steps: { cssSelector: string; title: string; description: string; placement: Placement }[];
 }
 
 export class BuilderApiError extends Error {
@@ -149,6 +155,16 @@ export class BuilderClient {
       `/tours/${encodeURIComponent(tourId)}/steps/order`,
       { stepIds },
     );
+  }
+  aiDraft(input: {
+    tourId: string;
+    pageUrl: string;
+    pageTitle: string;
+    goal: string;
+    stepCount: number;
+    elements: ScannedElement[];
+  }) {
+    return this.call<{ result: AiDraft }>("POST", "/ai/draft", input);
   }
   setPublished(tourId: string, publish: boolean) {
     return this.call<{ tour: BuilderTour }>(

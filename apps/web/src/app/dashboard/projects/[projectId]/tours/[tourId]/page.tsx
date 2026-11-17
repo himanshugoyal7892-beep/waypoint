@@ -1,4 +1,5 @@
-import { BarChart3, Link2, ListOrdered, Plus, Users } from "lucide-react";
+import { BarChart3, Link2, ListOrdered, Plus, Sparkles, Users } from "lucide-react";
+import { TourReview } from "@/components/ai/tour-review";
 import { HealthBadge, HealthPanel } from "@/components/insights";
 import { getProjectInsights } from "@/server/insights/service";
 import type { Metadata } from "next";
@@ -263,6 +264,22 @@ export default async function TourPage({
               </CardHeader>
               <CardContent>
                 <HealthPanel health={health} />
+              </CardContent>
+            </Card>
+          )}
+          {tour.steps.length > 0 && (
+            <Card id="ai-review">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-primary" aria-hidden /> Improve with AI
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TourReview
+                  tourId={tour.id}
+                  steps={tour.steps}
+                  dropOffStep={health?.dropOff?.fromOrder ?? null}
+                />
               </CardContent>
             </Card>
           )}

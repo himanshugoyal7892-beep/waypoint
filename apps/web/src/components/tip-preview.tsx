@@ -89,7 +89,7 @@ export function TipCard({
         />
       )}
       <div className="flex items-start gap-2">
-        <p className="flex-1 text-[15px] leading-snug font-semibold break-words">
+        <p dir="auto" className="flex-1 text-[15px] leading-snug font-semibold break-words">
           {step.title || `Step ${index + 1}`}
         </p>
         <Tag
@@ -102,7 +102,11 @@ export function TipCard({
         </Tag>
       </div>
       {step.description && (
-        <p className="mt-1 break-words whitespace-pre-line" style={{ color: v("--wp-body") }}>
+        <p
+          dir="auto"
+          className="mt-1 break-words whitespace-pre-line"
+          style={{ color: v("--wp-body") }}
+        >
           {step.description}
         </p>
       )}

@@ -13,5 +13,6 @@ export * from "./schemas/tour";
 export * from "./schemas/step";
 export * from "./schemas/builder";
 export * from "./schemas/events";
+export * from "./schemas/ai";
 export * from "./targeting";
 export * from "./tip-theme";

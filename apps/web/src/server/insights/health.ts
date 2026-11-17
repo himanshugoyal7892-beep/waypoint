@@ -54,6 +54,8 @@ export interface HealthResult {
   parts: HealthPart[];
   /** Most valuable first. */
   tips: string[];
+  /** The biggest drop between consecutive steps, when completion is below target. */
+  dropOff: { fromOrder: number; toOrder: number; lost: number } | null;
 }
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
@@ -76,6 +78,7 @@ function lengthPoints(n: number): number {
 
 export function computeTourHealth(input: HealthInput): HealthResult {
   const tips: { weight: number; text: string }[] = [];
+  let dropOff: HealthResult["dropOff"] = null;
   const steps = [...input.steps].sort((a, b) => a.stepOrder - b.stepOrder);
   const label = (order: number) => {
     const s = steps.find((x) => x.stepOrder === order);
@@ -93,13 +96,15 @@ export function computeTourHealth(input: HealthInput): HealthResult {
     });
   } else if (rate < COMPLETION_TARGET) {
     // Biggest drop between consecutive steps.
-    let worst: { order: number; lost: number } | null = null;
+    let worst: { order: number; from: number; lost: number } | null = null;
     for (let i = 1; i < steps.length; i++) {
       const prev = input.viewedByStep[steps[i - 1]!.stepOrder] ?? 0;
       const cur = input.viewedByStep[steps[i]!.stepOrder] ?? 0;
       const lost = prev - cur;
-      if (lost > 0 && (!worst || lost > worst.lost)) worst = { order: steps[i]!.stepOrder, lost };
+      if (lost > 0 && (!worst || lost > worst.lost))
+        worst = { order: steps[i]!.stepOrder, from: steps[i - 1]!.stepOrder, lost };
     }
+    if (worst) dropOff = { fromOrder: worst.from, toOrder: worst.order, lost: worst.lost };
     tips.push({
       weight: 35 - completionPts,
       text: worst
@@ -232,5 +237,6 @@ export function computeTourHealth(input: HealthInput): HealthResult {
     provisional: counted.length < parts.length,
     parts: parts.map((p) => ({ ...p, points: Math.round(p.points * 10) / 10 })),
     tips: tips.sort((a, b) => b.weight - a.weight).map((t) => t.text),
+    dropOff,
   };
 }
